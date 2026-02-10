@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Student Marketplace{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4 fw-bold">Checkout</h2>
+
+    <div class="row g-4">
+        <!-- Order Summary -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">Order Summary</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if cart_items %}
+                    {% for item in cart_items %}
+                    <div class="d-flex p-3 border-bottom {{ 'border-0' if loop.last }}">
+                        <!-- Image -->
+                        <div class="flex-shrink-0" style="width: 80px; height: 80px;">
+                            {% if item.image_path %}
+                            <img src="{{ item.image_path|product_image }}" alt="{{ item.name }}"
+                                class="w-100 h-100 object-fit-cover rounded border">
+                            {% else %}
+                            <div
+                                class="w-100 h-100 bg-light rounded border d-flex align-items-center justify-content-center text-muted">
+                                <i class="bi bi-image fs-4"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Details -->
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1 fw-bold">{{ item.name }}</h6>
+                            <div class="kv-pair text-muted small">
+                                <span>Quantity: {{ item.quantity }}</span> |
+                                <span>Price: ₹{{ "%.0f"|format(item.price) }}</span>
+                            </div>
+                            <div class="mt-2 fw-bold text-dark">
+                                Total: ₹{{ "%.0f"|format(item.quantity * item.price) }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="p-4 text-center">
+                        <p class="text-muted mb-0">No items in cart.</p>
+                        <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-primary mt-2">Browse
+                            Products</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Shipping Address (Visual Only - Backend limitation) -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">Delivery Address</h5>
+                </div>
+                <div class="card-body">
+                    <form id="checkoutForm" method="POST" action="{{ url_for('checkout') }}">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="address" class="form-label">Full Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="2"
+                                    placeholder="Street address, Hostel no, etc." required></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="city" placeholder="e.g. Mumbai"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="zip_code" class="form-label">Pincode</label>
+                                <input type="text" class="form-control" id="zip_code" name="zip_code"
+                                    placeholder="e.g. 400001" required>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <h5 class="fw-bold mb-3">Payment Method</h5>
+                                <div class="p-3 border rounded bg-light d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod"
+                                            id="paymentCOD" value="cod" checked disabled>
+                                        <label class="form-check-label fw-bold" for="paymentCOD">
+                                            Cash On Delivery
+                                        </label>
+                                    </div>
+                                    <i class="bi bi-cash-stack ms-auto fs-4 text-success"></i>
+                                </div>
+                                <p class="text-muted small mt-2">
+                                    <i class="bi bi-info-circle me-1"></i> Payment will be collected during delivery.
+                                </p>
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-warning w-100 py-3 fw-bold text-white shadow-sm">
+                                    CONFIRM & PLACE ORDER
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Details -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 90px;">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 text-muted text-uppercase small fw-bold">Price Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Items ({{ cart_items|length }})</span>
+                        <span>₹{{ "%.0f"|format(total) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Delivery Charges</span>
+                        <span>FREE</span>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex justify-content-between mb-0">
+                        <h5 class="fw-bold">Total Payable</h5>
+                        <h5 class="fw-bold">₹{{ "%.0f"|format(total) }}</h5>
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-3">
+                    <small class="text-muted d-block text-center mb-2">
+                        <i class="bi bi-shield-check"></i> Safe Payment
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

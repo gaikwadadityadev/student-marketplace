@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.product_name }} - Student Marketplace{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-image-main {
+        max-height: 500px;
+        object-fit: contain;
+    }
+    .product-thumbnail {
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s;
+    }
+    .product-thumbnail:hover, .product-thumbnail.active {
+        border-color: #0d6efd;
+    }
+    .rating-bar {
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .rating-fill {
+        height: 100%;
+        background-color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products') }}">Products</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products', category=product.category_slug) }}">{{ product.category_name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.product_name }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <!-- Product Images (Flipkart-style Gallery) -->
+        <div class="col-md-5 mb-4">
+            <!-- Main Image -->
+            <div class="card mb-3">
+                <img id="mainImage" 
+                     src="{{ url_for('static', filename=images[0].image_path) }}" 
+                     class="card-img-top product-image-main" 
+                     alt="{{ product.product_name }}"
+                     onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
+            </div>
+            
+            <!-- Thumbnail Images -->
+            {% if images|length > 1 %}
+            <div class="row g-2">
+                {% for image in images %}
+                <div class="col-3">
+                    <img src="{{ url_for('static', filename=image.image_path) }}" 
+                         class="img-fluid product-thumbnail {% if loop.first %}active{% endif %}" 
+                         alt="Thumbnail {{ loop.index }}"
+                         onclick="changeMainImage('{{ url_for('static', filename=image.image_path) }}', this)"
+                         onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Product Details -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Category -->
+                    <span class="badge bg-secondary mb-2">{{ product.category_name }}</span>
+                    
+                    <!-- Product Name -->
+                    <h2 class="card-title mb-3">{{ product.product_name }}</h2>
+                    
+                    <!-- Rating -->
+                    {% if product.avg_rating > 0 %}
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center">
+                            <span class="text-warning me-2">
+                                {% for i in range(5) %}
+                                    {% if i < product.avg_rating|int %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% elif i < product.avg_rating|int + 1 and product.avg_rating % 1 >= 0.5 %}
+                                        <i class="bi bi-star-half"></i>
+                                    {% else %}
+                                        <i class="bi bi-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
+                            <span class="fw-bold me-2">{{ product.avg_rating }}</span>
+                            <a href="#reviews" class="text-decoration-none">
+                                ({{ product.review_count }} reviews)
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No reviews yet</p>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <!-- Price -->
+                    <div class="mb-3">
+                        {% if product.discount_percent > 0 %}
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="text-decoration-line-through text-muted me-3 h5">₹{{ "%.2f"|format(product.price) }}</span>
+                            <span class="h3 text-primary mb-0">₹{{ "%.2f"|format(product.discounted_price) }}</span>
+                            <span class="badge bg-success ms-2">{{ product.discount_percent }}% OFF</span>
+                        </div>
+                        {% else %}
+                        <span class="h3 text-primary">₹{{ "%.2f"|format(product.discounted_price) }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Stock Status -->
+                    <div class="mb-3">
+                        {% if product.stock_quantity == 0 %}
+                        <span class="badge bg-danger">Out of Stock</span>
+                        {% elif product.stock_quantity < 5 %}
+                        <span class="badge bg-warning">Only {{ product.stock_quantity }} left</span>
+                        {% else %}
+                        <span class="badge bg-success">In Stock ({{ product.stock_quantity }} available)</span>
+                        {% endif %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h5>Description</h5>
+                        <p class="text-muted">{{ product.description }}</p>
+                    </div>
+                    
+                    <!-- Seller Info -->
+                    <div class="mb-4">
+                        <h5>Seller Information</h5>
+                        <p class="mb-1"><strong>Name:</strong> {{ product.seller_full_name }}</p>
+                        <p class="mb-0"><strong>Username:</strong> {{ product.seller_name }}</p>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        {% if product.stock_quantity > 0 %}
+                        <button class="btn btn-primary btn-lg" onclick="addToCart({{ product.product_id }})">
+                            <i class="bi bi-cart-plus"></i> Add to Cart
+                        </button>
+                        {% else %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="bi bi-x-circle"></i> Out of Stock
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-outline-primary" onclick="addToWishlist({{ product.product_id }})">
+                            <i class="bi bi-heart"></i> Add to Wishlist
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reviews Section -->
+    <div class="row mt-5" id="reviews">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-star"></i> Reviews & Ratings</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Rating Summary -->
+                        <div class="col-md-4 mb-4">
+                            <div class="text-center">
+                                <h2 class="text-primary mb-0">{{ product.avg_rating }}</h2>
+                                <div class="mb-2">
+                                    {% for i in range(5) %}
+                                        {% if i < product.avg_rating|int %}
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        {% elif i < product.avg_rating|int + 1 and product.avg_rating % 1 >= 0.5 %}
+                                            <i class="bi bi-star-half text-warning"></i>
+                                        {% else %}
+                                            <i class="bi bi-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <p class="text-muted">{{ product.review_count }} reviews</p>
+                            </div>
+                            
+                            <!-- Rating Distribution -->
+                            <div class="mt-4">
+                                {% for rating in range(5, 0, -1) %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <small class="me-2">{{ rating }} Star</small>
+                                    <div class="rating-bar flex-grow-1 me-2">
+                                        {% set percentage = (rating_dist[rating] / product.review_count * 100) if product.review_count > 0 else 0 %}
+                                        <div class="rating-fill" style="width: {{ percentage }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ rating_dist[rating] }}</small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Reviews List -->
+                        <div class="col-md-8">
+                            <!-- Submit Review Form (if logged in and not reviewed) -->
+                            {% if session.user_id and not user_reviewed %}
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Write a Review</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" action="{{ url_for('submit_review', slug=product.product_slug) }}">
+                                        <div class="mb-3">
+                                            <label class="form-label">Rating</label>
+                                            <div class="rating-input">
+                                                {% for i in range(5, 0, -1) %}
+                                                <input type="radio" name="rating" value="{{ i }}" id="rating{{ i }}" required>
+                                                <label for="rating{{ i }}" class="text-warning" style="font-size: 24px; cursor: pointer;">
+                                                    <i class="bi bi-star"></i>
+                                                </label>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Review Title</label>
+                                            <input type="text" class="form-control" name="review_title" placeholder="Brief summary of your review">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Your Review</label>
+                                            <textarea class="form-control" name="review_text" rows="4" required placeholder="Share your experience with this product..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% elif session.user_id and user_reviewed %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> You have already reviewed this product.
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Please <a href="{{ url_for('login') }}">login</a> to write a review.
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Reviews List -->
+                            {% if reviews %}
+                            <h5 class="mb-3">Customer Reviews</h5>
+                            {% for review in reviews %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <div>
+                                            <strong>{{ review.full_name or review.username }}</strong>
+                                            <span class="text-muted small ms-2">{{ review.review_date }}</span>
+                                        </div>
+                                        <div>
+                                            {% for i in range(5) %}
+                                                {% if i < review.rating %}
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star text-warning"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% if review.review_title %}
+                                    <h6 class="mb-2">{{ review.review_title }}</h6>
+                                    {% endif %}
+                                    <p class="mb-2">{{ review.review_text }}</p>
+                                    <div class="d-flex align-items-center">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="markHelpful({{ review.review_id }})">
+                                            <i class="bi bi-hand-thumbs-up"></i> Helpful ({{ review.helpful_count }})
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No reviews yet. Be the first to review this product!
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Change main product image when thumbnail is clicked
+function changeMainImage(imageSrc, element) {
+    document.getElementById('mainImage').src = imageSrc;
+    // Update active thumbnail
+    document.querySelectorAll('.product-thumbnail').forEach(thumb => {
+        thumb.classList.remove('active');
+    });
+    element.classList.add('active');
+}
+
+// Rating input interaction
+document.querySelectorAll('input[name="rating"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const rating = parseInt(this.value);
+        const labels = document.querySelectorAll('.rating-input label');
+        labels.forEach((label, index) => {
+            const starIndex = 5 - index;
+            if (starIndex <= rating) {
+                label.querySelector('i').classList.remove('bi-star');
+                label.querySelector('i').classList.add('bi-star-fill');
+            } else {
+                label.querySelector('i').classList.remove('bi-star-fill');
+                label.querySelector('i').classList.add('bi-star');
+            }
+        });
+    });
+});
+
+// Add to cart function
+function addToCart(productId) {
+    alert('Add to cart functionality - To be implemented');
+    // TODO: Implement cart functionality
+}
+
+// Add to wishlist function
+function addToWishlist(productId) {
+    alert('Add to wishlist functionality - To be implemented');
+    // TODO: Implement wishlist functionality
+}
+
+// Mark review as helpful
+function markHelpful(reviewId) {
+    // TODO: Implement AJAX call to mark review as helpful
+    alert('Thank you for your feedback!');
+}
+</script>
+{% endblock %}

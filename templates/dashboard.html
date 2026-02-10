@@ -1,0 +1,750 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Student Marketplace{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard Background */
+    .dashboard-bg {
+        background: linear-gradient(180deg, #f0f4f8 0%, #ffffff 100%);
+        min-height: 100vh;
+    }
+
+    /* Welcome Header */
+    .welcome-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-card::before {
+        content: '';
+        position: absolute;
+        right: -50px;
+        top: -50px;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .welcome-card::after {
+        content: '';
+        position: absolute;
+        right: 30px;
+        bottom: -30px;
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+    }
+
+    .welcome-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .welcome-subtitle {
+        opacity: 0.9;
+        font-size: 1rem;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        border: none;
+        height: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 16px;
+    }
+
+    .stat-icon.orders {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .stat-icon.pending {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .stat-icon.completed {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .stat-icon.products {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 6px;
+    }
+
+    /* Quick Action Cards */
+    .action-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        height: 100%;
+    }
+
+    .action-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        color: inherit;
+    }
+
+    .action-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 auto 12px;
+    }
+
+    .action-icon.sell {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .action-icon.browse {
+        background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%);
+        color: white;
+    }
+
+    .action-icon.cart {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .action-icon.orders {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .action-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #1a1a1a;
+    }
+
+    /* Section Cards */
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .section-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        color: #667eea;
+    }
+
+    .section-body {
+        padding: 20px 24px;
+    }
+
+    /* Modern Table */
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modern-table thead th {
+        background: #f8f9fa;
+        padding: 14px 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+
+    .modern-table thead th:first-child {
+        border-radius: 10px 0 0 10px;
+    }
+
+    .modern-table thead th:last-child {
+        border-radius: 0 10px 10px 0;
+    }
+
+    .modern-table tbody tr {
+        transition: background 0.2s;
+    }
+
+    .modern-table tbody tr:hover {
+        background: #f8f9ff;
+    }
+
+    .modern-table tbody td {
+        padding: 16px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .modern-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .status-badge.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge.approved {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .status-badge.completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-badge.cancelled {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    /* Activity Timeline */
+    .activity-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -26px;
+        top: 4px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #667eea;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #667eea;
+    }
+
+    .timeline-dot.pending {
+        background: #ffc107;
+        box-shadow: 0 0 0 2px #ffc107;
+    }
+
+    .timeline-dot.completed {
+        background: #28a745;
+        box-shadow: 0 0 0 2px #28a745;
+    }
+
+    .timeline-dot.cancelled {
+        background: #dc3545;
+        box-shadow: 0 0 0 2px #dc3545;
+    }
+
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 12px 16px;
+        border-radius: 10px;
+    }
+
+    .timeline-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #1a1a1a;
+        margin-bottom: 4px;
+    }
+
+    .timeline-meta {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #ddd;
+        margin-bottom: 16px;
+    }
+
+    .empty-state-text {
+        color: #888;
+        margin-bottom: 16px;
+    }
+
+    /* View All Link */
+    .view-all-link {
+        font-size: 0.875rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .view-all-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Action Buttons */
+    .btn-modern {
+        border-radius: 10px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-modern-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-modern-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-modern-outline {
+        background: white;
+        border: 1px solid #e0e0e0;
+        color: #333;
+    }
+
+    .btn-modern-outline:hover {
+        background: #f5f5f5;
+        border-color: #ccc;
+    }
+
+    .btn-modern-danger {
+        background: #fff;
+        border: 1px solid #dc3545;
+        color: #dc3545;
+    }
+
+    .btn-modern-danger:hover {
+        background: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-bg py-4">
+    <div class="container">
+        <!-- Welcome Header -->
+        <div class="welcome-card mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="welcome-title">Welcome back, {{ session.username }}! 👋</h1>
+                    <p class="welcome-subtitle mb-0">Manage your products and track your orders from your personal
+                        dashboard.</p>
+                </div>
+                <div class="col-md-4 text-end d-none d-md-block">
+                    <i class="bi bi-mortarboard" style="font-size: 5rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-icon orders">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <div class="stat-value">{{ orders|length if orders else 0 }}</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-icon pending">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="stat-value">{{ orders|selectattr('status', 'equalto', 'pending')|list|length if orders
+                        else 0 }}</div>
+                    <div class="stat-label">Pending Orders</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-icon completed">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="stat-value">{{ orders|selectattr('status', 'equalto', 'completed')|list|length if orders
+                        else 0 }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-icon products">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="stat-value">{{ products|length if products else 0 }}</div>
+                    <div class="stat-label">My Products</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('product_upload') }}" class="action-card">
+                    <div class="action-icon sell">
+                        <i class="bi bi-plus-lg"></i>
+                    </div>
+                    <div class="action-title">Sell Product</div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('products') }}" class="action-card">
+                    <div class="action-icon browse">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div class="action-title">Browse</div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('cart') }}" class="action-card">
+                    <div class="action-icon cart">
+                        <i class="bi bi-cart3"></i>
+                    </div>
+                    <div class="action-title">My Cart</div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('order_history') }}" class="action-card">
+                    <div class="action-icon orders">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <div class="action-title">All Orders</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Main Content Area -->
+            <div class="col-lg-8">
+                <!-- My Products Section -->
+                <div class="section-card mb-4">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="bi bi-box-seam"></i> My Products
+                        </h3>
+                        <a href="{{ url_for('product_upload') }}" class="btn btn-modern btn-modern-primary btn-sm">
+                            <i class="bi bi-plus"></i> Add New
+                        </a>
+                    </div>
+                    <div class="section-body p-0">
+                        {% if products %}
+                        <div class="table-responsive">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ product.name }}</strong>
+                                        </td>
+                                        <td>₹{{ "%.0f"|format(product.price) }}</td>
+                                        <td><span class="text-muted">{{ product.category }}</span></td>
+                                        <td>
+                                            {% if product.status == 'approved' %}
+                                            <span class="status-badge completed"><i class="bi bi-check-circle"></i>
+                                                Approved</span>
+                                            {% elif product.status == 'pending' %}
+                                            <span class="status-badge pending"><i class="bi bi-clock"></i>
+                                                Pending</span>
+                                            {% else %}
+                                            <span class="status-badge rejected"><i class="bi bi-x-circle"></i>
+                                                Rejected</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('product_edit', product_id=product.product_id) }}"
+                                                class="btn btn-modern btn-modern-outline btn-sm me-1">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form method="POST"
+                                                action="{{ url_for('product_delete', product_id=product.product_id) }}"
+                                                class="d-inline" onsubmit="return confirm('Delete this product?');">
+                                                <button type="submit" class="btn btn-modern btn-modern-danger btn-sm">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="bi bi-box"></i></div>
+                            <p class="empty-state-text">You haven't posted any products yet</p>
+                            <a href="{{ url_for('product_upload') }}" class="btn btn-modern btn-modern-primary">
+                                <i class="bi bi-plus"></i> Post Your First Product
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recent Orders Section -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="bi bi-receipt"></i> Recent Orders
+                        </h3>
+                        <a href="{{ url_for('order_history') }}" class="view-all-link">View All →</a>
+                    </div>
+                    <div class="section-body p-0">
+                        {% if orders %}
+                        <div class="table-responsive">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Amount</th>
+                                        <th>Items</th>
+                                        <th>Status</th>
+                                        <th>Delivery</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in orders %}
+                                    <tr>
+                                        <td><strong>#{{ order.order_id }}</strong></td>
+                                        <td>₹{{ "%.0f"|format(order.total_amount) }}</td>
+                                        <td>{{ order.item_count }} item(s)</td>
+                                        <td>
+                                            {% if order.status == 'completed' %}
+                                            <span class="status-badge completed"><i class="bi bi-check-circle"></i>
+                                                Completed</span>
+                                            {% elif order.status == 'approved' %}
+                                            <span class="status-badge approved"><i class="bi bi-check2"></i>
+                                                Approved</span>
+                                            {% elif order.status == 'rejected' %}
+                                            <span class="status-badge rejected"><i class="bi bi-x-circle"></i>
+                                                Rejected</span>
+                                            {% elif order.status == 'cancelled' %}
+                                            <span class="status-badge cancelled"><i class="bi bi-dash-circle"></i>
+                                                Cancelled</span>
+                                            {% else %}
+                                            <span class="status-badge pending"><i class="bi bi-clock"></i>
+                                                Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if order.status in ['pending', 'approved'] %}
+                                            <span class="text-muted small"><i class="bi bi-truck"></i> 3-5 days</span>
+                                            {% elif order.status == 'completed' %}
+                                            <span class="text-success small"><i class="bi bi-check2-all"></i>
+                                                Delivered</span>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-muted">{{ order.created_at.strftime('%d %b') if order.created_at
+                                            else 'N/A' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="bi bi-bag"></i></div>
+                            <p class="empty-state-text">No orders yet</p>
+                            <a href="{{ url_for('products') }}" class="btn btn-modern btn-modern-primary">
+                                <i class="bi bi-cart"></i> Start Shopping
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Order Activity -->
+                <div class="section-card mb-4">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="bi bi-activity"></i> Order Activity
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        {% if orders %}
+                        <div class="activity-timeline">
+                            {% for order in orders[:5] %}
+                            <div class="timeline-item">
+                                <div class="timeline-dot {{ order.status }}"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Order #{{ order.order_id }}</div>
+                                    <div class="timeline-meta">
+                                        {% if order.status == 'completed' %}
+                                        <span class="text-success">Delivered</span>
+                                        {% elif order.status == 'pending' %}
+                                        <span class="text-warning">Processing</span>
+                                        {% elif order.status == 'approved' %}
+                                        <span class="text-info">Approved</span>
+                                        {% elif order.status == 'cancelled' %}
+                                        <span class="text-danger">Cancelled</span>
+                                        {% else %}
+                                        <span class="text-secondary">{{ order.status|capitalize }}</span>
+                                        {% endif %}
+                                        • ₹{{ "%.0f"|format(order.total_amount) }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-clock-history text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mt-2 mb-0 small">No activity yet</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="bi bi-graph-up"></i> Quick Stats
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <span class="text-muted">Total Spent</span>
+                            <strong>₹{{ "%.0f"|format(orders|sum(attribute='total_amount')) if orders else 0 }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <span class="text-muted">Products Listed</span>
+                            <strong>{{ products|length if products else 0 }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Active Orders</span>
+                            <strong>{{ orders|selectattr('status', 'in', ['pending', 'approved'])|list|length if orders
+                                else 0 }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

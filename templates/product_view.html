@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Student Marketplace{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Breadcrumb -->
+    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb bg-white p-3 rounded shadow-sm">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}"
+                    class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products') }}"
+                    class="text-decoration-none text-muted">Products</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row bg-white p-4 rounded shadow-sm mx-1">
+        <!-- Product Image -->
+        {% if (product.category == 'Books & Notes' or product.category == 'Electronics' or product.category == 'Student
+        Essentials' or product.category == 'Accessories') and product.image_path %}
+        <div class="col-md-5 mb-4 mb-md-0">
+            <div class="bg-light rounded overflow-hidden shadow-sm sticky-top" style="top: 90px;">
+                <img src="{{ product.image_path | product_image }}" class="img-fluid w-100" alt="{{ product.name }}">
+            </div>
+        </div>
+        <div class="col-md-7">
+            {% else %}
+            <div class="col-12">
+                {% endif %}
+                <h1 class="h3 fw-normal mb-2">{{ product.name }}</h1>
+
+                <!-- Rating Badge -->
+                <div class="d-flex align-items-center mb-3">
+                    <span class="badge bg-success d-flex align-items-center px-2 py-1 me-2">
+                        {{ product.avg_rating }} <i class="bi bi-star-fill ms-1" style="font-size: 0.75rem;"></i>
+                    </span>
+                    <span class="text-muted fw-bold small text-secondary me-2">{{ product.review_count }} Ratings &
+                        Reviews</span>
+                </div>
+
+                <!-- Price -->
+                <div class="mb-3">
+                    <span class="h2 fw-bold">₹{{ "%.0f"|format(product.price) }}</span>
+                    <span class="text-muted small ms-2">Inclusive of all taxes</span>
+                </div>
+
+                <div class="d-flex gap-2 mb-4">
+                    {% if session.user_id and session.user_id != product.seller_id %}
+                    <form method="POST" action="{{ url_for('cart_add', product_id=product.product_id) }}"
+                        class="flex-grow-1">
+                        <button type="submit" class="btn btn-primary w-100 py-2" id="addToCartBtn">
+                            <i class="bi bi-cart-plus-fill"></i> ADD TO CART
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('cart_add', product_id=product.product_id) }}"
+                        class="flex-grow-1" id="buyNowForm">
+                        <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-white" id="buyNowBtn">
+                            <i class="bi bi-lightning-fill"></i> BUY NOW
+                        </button>
+                    </form>
+                    {% elif not session.user_id %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary w-100 py-2">
+                        <i class="bi bi-box-arrow-in-right"></i> LOGIN TO BUY
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Seller Info -->
+                <div class="mb-4 p-3 bg-light rounded border">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-2">Seller Details</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center text-primary border"
+                                style="width: 48px; height: 48px;">
+                                <i class="bi bi-shop" style="font-size: 1.25rem;"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ product.full_name }}</h6>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <h5 class="h6 text-muted text-uppercase fw-bold">Description</h5>
+                    <p class="text-break" style="white-space: pre-line;">{{ product.description }}</p>
+                </div>
+
+                <!-- Product Specs / Category -->
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted small w-25">Category</td>
+                                    <td>{{ product.category }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Updated</td>
+                                    <td>{{ product.created_at }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="mt-4 bg-white p-4 rounded shadow-sm border border-light">
+            <h4 class="mb-4">Ratings & Reviews</h4>
+
+            <div class="row">
+                <!-- Ratings Summary -->
+                {% if product.review_count > 0 %}
+                <div class="col-md-4 border-end">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="display-4 fw-bold me-3">{{ product.avg_rating }}</div>
+                        <div class="d-flex flex-column">
+                            <i class="bi bi-star-fill fs-5 text-warning"></i>
+                            <span class="text-muted small">{{ product.review_count }} Reviews</span>
+                        </div>
+                    </div>
+
+                    <!-- Distribution -->
+                    <div class="pe-md-4">
+                        {% for rating in range(5, 0, -1) %}
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="text-muted small me-2" style="width: 15px;">{{ rating }}</span>
+                            <i class="bi bi-star-fill text-muted small me-2" style="font-size: 0.75rem;"></i>
+                            <div class="rating-bar flex-grow-1">
+                                {% set percentage = (rating_dist[rating] / product.review_count * 100) if
+                                product.review_count > 0 else 0 %}
+                                <div class="rating-fill" style="width: {{ percentage }}%"></div>
+                            </div>
+                            <span class="text-muted small ms-2 text-end" style="width: 30px;">{{ rating_dist[rating]
+                                }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-md-4 border-end text-center py-5">
+                    <i class="bi bi-stars display-4 text-muted mb-3"></i>
+                    <p class="text-muted">No reviews yet.</p>
+                    <p class="small text-muted">Be the first to rate this product!</p>
+                </div>
+                {% endif %}
+
+                <!-- Write Review / Reviews List -->
+                <div class="col-md-8 ps-md-4">
+
+                    <!-- Write Review Button/Form -->
+                    {% if session.user_id and session.user_id != product.seller_id %}
+                    {% if not user_reviewed %}
+                    <button class="btn btn-outline-primary mb-4" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#reviewForm">
+                        <i class="bi bi-pencil"></i> Rate This Product
+                    </button>
+
+                    <div class="collapse mb-4" id="reviewForm">
+                        <div class="card card-body bg-light border-0">
+                            <h5 class="mb-3">Write a Review</h5>
+                            <form method="POST" action="{{ url_for('submit_review', product_id=product.product_id) }}">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Rate it</label>
+                                    <div class="rating-input d-flex flex-row-reverse justify-content-end">
+                                        {% for i in range(5, 0, -1) %}
+                                        <input type="radio" class="btn-check" name="rating" value="{{ i }}"
+                                            id="rating{{ i }}" required>
+                                        <label class="btn btn-outline-warning border-0 fs-3 p-1" for="rating{{ i }}">
+                                            <i class="bi bi-star-fill"></i>
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">Hover/Click to rate</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Short Title</label>
+                                    <input type="text" class="form-control" name="review_title"
+                                        placeholder="e.g. Nice product, worth the money">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Detailed Review</label>
+                                    <textarea class="form-control" name="review_text" rows="3" required
+                                        placeholder="What did you like or dislike?"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success d-inline-block">
+                        <i class="bi bi-check-circle-fill"></i> You have already reviewed this product.
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
+                    <!-- Reviews List -->
+                    <div class="reviews-list">
+                        {% if reviews %}
+                        {% for review in reviews %}
+                        <div class="review-item border-bottom py-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-success me-2 px-2 py-1">
+                                    {{ review.rating }} <i class="bi bi-star-fill" style="font-size: 0.75rem;"></i>
+                                </span>
+                                <strong class="me-2">{{ review.review_title }}</strong>
+                            </div>
+                            <p class="mb-2">{{ review.review_text }}</p>
+                            <div class="d-flex align-items-center text-muted small">
+                                <span class="me-3">{{ review.full_name }}</span>
+                                <i class="bi bi-check-circle-fill text-muted me-1 small"></i>
+                                <span class="me-3">Certified Buyer</span>
+                                <span>{{ review.review_date }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .rating-input input:checked~label i,
+        .rating-input label:hover~label i,
+        .rating-input label:hover i {
+            color: #ffc107 !important;
+        }
+
+        .rating-input label i {
+            color: #dedede;
+            /* Gray when not selected */
+            transition: color 0.1s;
+        }
+
+        /* Product CTA buttons - aligned with global theme */
+        #addToCartBtn {
+            background-color: var(--sm-primary);
+            border: none;
+            border-radius: 2px;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 10px 20px;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #addToCartBtn:hover {
+            background-color: var(--sm-primary-dark);
+            box-shadow: 0 2px 4px rgba(40, 116, 240, 0.25);
+        }
+
+        #addToCartBtn:active {
+            background-color: var(--sm-primary-dark);
+            box-shadow: 0 1px 2px rgba(40, 116, 240, 0.2);
+        }
+
+        #buyNowBtn {
+            background-color: var(--sm-accent-strong);
+            border: none;
+            border-radius: 2px;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 10px 20px;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #buyNowBtn:hover {
+            background-color: var(--sm-accent-dark);
+            box-shadow: 0 2px 4px rgba(251, 100, 27, 0.25);
+        }
+
+        #buyNowBtn:active {
+            background-color: #cc4d0a;
+            box-shadow: 0 1px 2px rgba(251, 100, 27, 0.3);
+        }
+
+        #buyNowBtn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+
+    <script>
+        // Handle Buy Now button - add to cart then redirect to checkout
+        document.getElementById('buyNowForm')?.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('buyNowBtn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+            // Create form data
+            const formData = new FormData();
+
+            // Add to cart via fetch, then redirect to checkout
+            fetch('{{ url_for("cart_add", product_id=product.product_id) }}', {
+                method: 'POST',
+                body: formData,
+                redirect: 'follow'
+            })
+                .then(() => {
+                    // Redirect to checkout after adding to cart
+                    window.location.href = '{{ url_for("checkout") }}';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    alert('Failed to add product to cart. Please try again.');
+                });
+        });
+    </script>
+    {% endblock %}

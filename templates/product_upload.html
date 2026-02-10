@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Product - Student Marketplace{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-upload"></i> Upload Product</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('product_upload') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Product Name *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="name" 
+                                   name="name" 
+                                   required 
+                                   placeholder="e.g., Calculus Textbook">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description *</label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="4" 
+                                      required 
+                                      placeholder="Describe your product..."></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="price" class="form-label">Price (₹) *</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="price" 
+                                       name="price" 
+                                       step="0.01" 
+                                       min="0.01" 
+                                       required 
+                                       placeholder="0.00">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label">Category *</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Books">Books</option>
+                                    <option value="Gadgets">Gadgets</option>
+                                    <option value="Accessories">Accessories</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Clothing">Clothing</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Product Image</label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="image" 
+                                   name="image" 
+                                   accept="image/*">
+                            <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WEBP (Max 16MB)</small>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Your product will be reviewed by admin before it becomes visible to other students.
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Upload Product</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

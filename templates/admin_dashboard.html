@@ -1,0 +1,931 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Student Marketplace{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard Background */
+    .admin-dashboard {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+        min-height: 100vh;
+        padding: 0;
+    }
+
+    /* Top Navigation Bar */
+    .admin-topbar {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        padding: 20px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: white;
+    }
+
+    .topbar-brand .logo {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .topbar-brand h4 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.3rem;
+    }
+
+    .topbar-brand small {
+        opacity: 0.8;
+        font-size: 0.8rem;
+    }
+
+    .topbar-nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .topbar-nav a {
+        color: rgba(255, 255, 255, 0.85);
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .topbar-nav a:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+    }
+
+    .topbar-nav a.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .btn-logout {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 25px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-logout:hover {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+
+    .admin-avatar {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    /* Dashboard Content */
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px 40px;
+    }
+
+    /* Welcome Section */
+    .welcome-section {
+        background: white;
+        border-radius: 20px;
+        padding: 30px 40px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .welcome-info h2 {
+        margin: 0 0 8px;
+        font-weight: 700;
+        color: #1e3c72;
+        font-size: 1.8rem;
+    }
+
+    .welcome-info p {
+        margin: 0;
+        color: #666;
+        font-size: 1rem;
+    }
+
+    .welcome-date {
+        text-align: right;
+        color: #888;
+    }
+
+    .welcome-date .date {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e3c72;
+    }
+
+    .welcome-date .day {
+        font-size: 0.9rem;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.blue::before {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-card.green::before {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .stat-card.orange::before {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .stat-card.purple::before {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .stat-card.blue .stat-icon {
+        background: #eef2ff;
+        color: #667eea;
+    }
+
+    .stat-card.green .stat-icon {
+        background: #ecfdf5;
+        color: #10b981;
+    }
+
+    .stat-card.orange .stat-icon {
+        background: #fef2f2;
+        color: #f5576c;
+    }
+
+    .stat-card.purple .stat-icon {
+        background: #eff6ff;
+        color: #4facfe;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        color: #888;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* Content Grid */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    /* Section Cards */
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: #1a1a2e;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-header h5 i {
+        color: #667eea;
+    }
+
+    .section-header .badge {
+        background: #eef2ff;
+        color: #667eea;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .section-body {
+        padding: 20px 25px;
+    }
+
+    /* Tables */
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .modern-table th {
+        text-align: left;
+        padding: 15px;
+        background: #f8fafc;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .modern-table td {
+        padding: 15px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .modern-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .modern-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .product-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .product-thumb {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .product-seller {
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+
+    /* Badges */
+    .badge-status {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-pending {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .badge-approved {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .badge-completed {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .badge-rejected {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-approve {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .btn-approve:hover {
+        background: #059669;
+        color: white;
+    }
+
+    .btn-reject {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .btn-reject:hover {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-complete {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .btn-complete:hover {
+        background: #2563eb;
+        color: white;
+    }
+
+    /* Activity List */
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .activity-icon.order {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .activity-icon.user {
+        background: #fce7f3;
+        color: #db2777;
+    }
+
+    .activity-icon.product {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-content h6 {
+        margin: 0 0 3px;
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.9rem;
+    }
+
+    .activity-content p {
+        margin: 0;
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+
+    .activity-amount {
+        font-weight: 700;
+        color: #059669;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94a3b8;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .admin-topbar {
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .topbar-nav {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .dashboard-container {
+            padding: 20px;
+        }
+
+        .welcome-section {
+            flex-direction: column;
+            text-align: center;
+            gap: 20px;
+        }
+
+        .welcome-date {
+            text-align: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <!-- Top Navigation Bar -->
+    <nav class="admin-topbar">
+        <div class="topbar-brand">
+            <div class="logo">
+                <i class="bi bi-shop"></i>
+            </div>
+            <div>
+                <h4>Student Marketplace</h4>
+                <small>Admin Dashboard</small>
+            </div>
+        </div>
+
+        <div class="topbar-nav">
+            <a href="#" class="active"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
+            <a href="#ordersSection"><i class="bi bi-receipt me-1"></i> Orders</a>
+            <a href="#usersSection"><i class="bi bi-people me-1"></i> Users</a>
+            <a href="{{ url_for('index') }}"><i class="bi bi-house me-1"></i> View Store</a>
+        </div>
+
+        <div class="topbar-actions">
+            <a href="{{ url_for('logout') }}" class="btn-logout">
+                <i class="bi bi-box-arrow-right me-2"></i>Logout
+            </a>
+            <div class="admin-avatar">A</div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <div class="welcome-info">
+                <h2>Welcome back, Admin! 👋</h2>
+                <p>Here's what's happening with your marketplace today.</p>
+            </div>
+            <div class="welcome-date">
+                <div class="date">{{ now.strftime('%d') if now else '' }}</div>
+                <div class="day">{{ now.strftime('%B %Y') if now else '' }}</div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-number">{{ stats.total_students if stats else 0 }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-number">{{ stats.approved_products if stats else 0 }}</div>
+                <div class="stat-label">Live Products</div>
+            </div>
+
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+                <div class="stat-number">{{ stats.pending_products if stats else 0 }}</div>
+                <div class="stat-label">Pending Approval</div>
+            </div>
+
+            <div class="stat-card purple">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="bi bi-cart-check-fill"></i>
+                    </div>
+                </div>
+                <div class="stat-number">{{ stats.total_orders if stats else 0 }}</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Pending Approvals -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h5><i class="bi bi-clock-history"></i> Pending Approvals</h5>
+                    <span class="badge">{{ pending_products|length if pending_products else 0 }} items</span>
+                </div>
+                <div class="table-responsive">
+                    {% if pending_products %}
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in pending_products[:5] %}
+                            <tr>
+                                <td>
+                                    <div class="product-info">
+                                        <div class="product-thumb">
+                                            <i class="bi bi-box"></i>
+                                        </div>
+                                        <div>
+                                            <div class="product-name">{{ product.name }}</div>
+                                            <div class="product-seller">by {{ product.username }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><strong>₹{{ "%.0f"|format(product.price) }}</strong></td>
+                                <td><span class="badge-status badge-pending">Pending</span></td>
+                                <td>
+                                    <form method="POST"
+                                        action="{{ url_for('admin_approve_product', product_id=product.product_id) }}"
+                                        class="d-inline">
+                                        <button type="submit" class="btn-action btn-approve" title="Approve"
+                                            onclick="return confirm('Approve this product?')">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                    <form method="POST"
+                                        action="{{ url_for('admin_reject_product', product_id=product.product_id) }}"
+                                        class="d-inline">
+                                        <button type="submit" class="btn-action btn-reject" title="Reject"
+                                            onclick="return confirm('Reject this product?')">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <p>All caught up! No pending approvals.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h5><i class="bi bi-activity"></i> Recent Activity</h5>
+                </div>
+                <div class="section-body">
+                    {% if orders %}
+                    {% for order in orders[:5] %}
+                    <div class="activity-item">
+                        <div class="activity-icon order">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h6>Order #{{ order.order_id }}</h6>
+                            <p>{{ order.full_name }} • {{ order.created_at.strftime('%d %b') if order.created_at else
+                                'N/A' }}</p>
+                        </div>
+                        <div class="activity-amount">₹{{ "%.0f"|format(order.total_amount) }}</div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>No recent activity</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div class="section-card mb-4" id="ordersSection">
+            <div class="section-header">
+                <h5><i class="bi bi-receipt-cutoff"></i> All Orders</h5>
+                <span class="badge">{{ orders|length if orders else 0 }} orders</span>
+            </div>
+            <div class="table-responsive">
+                {% if orders %}
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr id="order-row-{{ order.order_id }}">
+                            <td><strong>#{{ order.order_id }}</strong></td>
+                            <td>
+                                <div class="product-name">{{ order.full_name }}</div>
+                                <div class="product-seller">{{ order.email }}</div>
+                            </td>
+                            <td><strong>₹{{ "%.0f"|format(order.total_amount) }}</strong></td>
+                            <td id="status-cell-{{ order.order_id }}">
+                                {% if order.status == 'completed' %}
+                                <span class="badge-status badge-completed">Completed</span>
+                                {% elif order.status == 'approved' %}
+                                <span class="badge-status badge-approved">Approved</span>
+                                {% elif order.status == 'rejected' %}
+                                <span class="badge-status badge-rejected">Rejected</span>
+                                {% else %}
+                                <span class="badge-status badge-pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.created_at.strftime('%d %b %Y') if order.created_at else 'N/A' }}</td>
+                            <td id="action-cell-{{ order.order_id }}">
+                                {% if order.status == 'pending' %}
+                                <button type="button" class="btn-action btn-approve"
+                                    onclick="updateOrderStatus({{ order.order_id }}, 'approved')" title="Approve">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-reject"
+                                    onclick="updateOrderStatus({{ order.order_id }}, 'rejected')" title="Reject">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                {% elif order.status == 'approved' %}
+                                <button type="button" class="btn-action btn-complete"
+                                    onclick="updateOrderStatus({{ order.order_id }}, 'completed')" title="Complete">
+                                    <i class="bi bi-check-all"></i>
+                                </button>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-cart-x"></i>
+                    <p>No orders yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div class="section-card" id="usersSection">
+            <div class="section-header">
+                <h5><i class="bi bi-people-fill"></i> User Management</h5>
+                <span class="badge">{{ users|length if users else 0 }} users</span>
+            </div>
+            <div class="table-responsive">
+                {% if users %}
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-thumb"
+                                        style="background: {{ '#dbeafe' if user.role == 'admin' else '#f0f4ff' }}">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <div>
+                                        <div class="product-name">{{ user.username }}</div>
+                                        <div class="product-seller">{{ user.full_name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.role == 'admin' %}
+                                <span class="badge-status badge-completed">Admin</span>
+                                {% else %}
+                                <span class="badge-status" style="background: #f1f5f9; color: #64748b;">Student</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.status == 'active' %}
+                                <span class="badge-status badge-approved">Active</span>
+                                {% else %}
+                                <span class="badge-status badge-rejected">Blocked</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.role != 'admin' %}
+                                {% if user.status == 'active' %}
+                                <form method="POST" action="{{ url_for('admin_block_user', user_id=user.user_id) }}"
+                                    class="d-inline">
+                                    <button type="submit" class="btn-action btn-reject" title="Block"
+                                        onclick="return confirm('Block this user?')">
+                                        <i class="bi bi-lock"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('admin_unblock_user', user_id=user.user_id) }}"
+                                    class="d-inline">
+                                    <button type="submit" class="btn-action btn-approve" title="Unblock">
+                                        <i class="bi bi-unlock"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-person-x"></i>
+                    <p>No users found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Order Status Update
+    function updateOrderStatus(orderId, newStatus) {
+        const statusNames = {
+            'pending': 'Pending',
+            'approved': 'Approved',
+            'rejected': 'Rejected',
+            'completed': 'Completed'
+        };
+
+        if (!confirm(`Change order #${orderId} to "${statusNames[newStatus]}"?`)) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('status', newStatus);
+
+        fetch(`/admin/order/update_status/${orderId}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+            .then(async response => {
+                const data = await response.json();
+                if (!data.success) throw new Error(data.message);
+                return data;
+            })
+            .then(data => {
+                location.reload();
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+    }
+</script>
+{% endblock %}

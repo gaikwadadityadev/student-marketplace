@@ -1,0 +1,331 @@
+/* Student Marketplace - Custom Styles */
+
+/* ==================== THEME VARIABLES ==================== */
+:root {
+    /* Core brand palette - modern, student-friendly */
+    --sm-primary: #3949ab;          /* Deep indigo / primary */
+    --sm-primary-dark: #283593;     /* Darker indigo for hover */
+    --sm-primary-soft: #e8eaf6;     /* Soft background tint */
+
+    --sm-accent: #ffb300;           /* Warm accent (yellow/orange) */
+    --sm-accent-strong: #fb641b;    /* Strong CTA (Buy Now) */
+    --sm-accent-dark: #e65a10;
+
+    --sm-success: #26a541;
+    --sm-danger: #e53935;
+    --sm-warning: #ffa000;
+    --sm-info: #00acc1;
+
+    --sm-bg: #f5f6fb;               /* App background */
+    --sm-surface: #ffffff;          /* Cards / panels */
+    --sm-border-subtle: #e0e3ef;
+
+    --sm-text-main: #1f2933;
+    --sm-text-muted: #6c757d;
+}
+
+/* ==================== GLOBAL STYLES ==================== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--sm-bg);
+    color: var(--sm-text-main);
+}
+
+main {
+    flex: 1;
+}
+
+/* Override Bootstrap primary helpers to match theme */
+.bg-primary {
+    background: linear-gradient(135deg, var(--sm-primary), var(--sm-primary-dark)) !important;
+}
+
+.text-primary {
+    color: var(--sm-primary) !important;
+}
+
+.btn-primary {
+    background-color: var(--sm-primary) !important;
+    border-color: var(--sm-primary) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--sm-primary-dark) !important;
+    border-color: var(--sm-primary-dark) !important;
+}
+
+.btn-outline-primary {
+    color: var(--sm-primary) !important;
+    border-color: var(--sm-primary) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--sm-primary) !important;
+    color: #fff !important;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, var(--sm-primary) 0%, var(--sm-primary-dark) 100%);
+    padding: 80px 0;
+    color: #fff;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.card-img-top {
+    border-radius: 10px 10px 0 0;
+}
+
+/* Feature Box */
+.feature-box {
+    transition: transform 0.3s ease;
+}
+
+.feature-box:hover {
+    transform: translateY(-10px);
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+    transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--sm-accent) !important;
+    opacity: 0.95;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 6px;
+    transition: all 0.25s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.18);
+}
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--sm-primary);
+    box-shadow: 0 0 0 0.2rem rgba(57, 73, 171, 0.25);
+}
+
+/* Tables */
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table thead {
+    background-color: #eff1f7;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    background: linear-gradient(135deg, #2c3e50, #4b6cb7); /* Softer, lighter gradient (Blue-Grey) */
+    color: #f8f9fa; /* High contrast text */
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+
+.footer-link {
+    color: #e9ecef !important;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.footer-link:hover {
+    color: var(--sm-accent) !important;
+    padding-left: 8px;
+    text-shadow: 0 0 10px rgba(255, 179, 0, 0.5); /* Glow effect */
+}
+
+/* Product Cards */
+.product-card {
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: scale(1.05);
+}
+
+/* Image Placeholder */
+.img-placeholder {
+    background: linear-gradient(135deg, #f5f7fa 0%, #d0d4f2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 40px 0;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+    }
+}
+
+/* Loading Spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Badge Styles */
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
+/* Cart Styles */
+.cart-item {
+    transition: background-color 0.3s ease;
+}
+
+.cart-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Admin Dashboard */
+.stats-card {
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: scale(1.05);
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+
+/* Rating Distribution Bars */
+.rating-bar {
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.rating-fill {
+    height: 100%;
+    background-color: var(--sm-success);
+}
+
+/* Star Rating Colors */
+.text-warning {
+    color: #ffc107 !important;
+}
+.text-success {
+    color: #26a541 !important;
+}
+
+/* Product View & Reviews */
+.review-date {
+    font-size: 0.85rem;
+    color: #878787;
+}
+.verified-badge {
+    font-size: 0.75rem;
+    color: #878787;
+}
+
+/* FlipKart-ish Buttons */
+.btn-orange {
+    background-color: #ff9f00;
+    border-color: #ff9f00;
+    color: white;
+    font-weight: 500;
+}
+.btn-orange:hover {
+    background-color: #f39000;
+    color: white;
+}
+.btn-orange-outline {
+    border-color: #ff9f00;
+    color: #ff9f00;
+}
+.btn-orange-outline:hover {
+    background-color: #ff9f00;
+    color: white;
+}
+
+/* Product Card Improvements */
+.card-img-top {
+    object-fit: contain;
+    padding: 1rem;
+}
+

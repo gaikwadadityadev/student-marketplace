@@ -1,0 +1,102 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Flask
+instance/
+.webassets-cache
+*.pyc
+flask_session/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables & Secrets
+.env
+.env.local
+.env.production
+.env.*.local
+*.key
+*.pem
+*.crt
+secrets.json
+credentials.json
+
+# Security
+csrf_token_cache/
+session_data/
+*.secret
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Uploads (keep directory structure but ignore files)
+static/uploads/*
+!static/uploads/.gitkeep
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep
+
+# Logs
+*.log
+logs/
+*.log.*
+error.log
+access.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Testing
+.pytest_cache/
+.tox/
+.hypothesis/
+
+# Backup files
+*.backup
+*.orig
+*_backup.*
+
+# Node (if using any frontend tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Redis (if used for rate limiting)
+dump.rdb
+
+

@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - Student Marketplace{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Full Page Background */
+    .admin-login-page {
+        min-height: 100vh;
+        background: #1a1a2e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    /* Login Card */
+    .admin-login-card {
+        width: 100%;
+        max-width: 420px;
+        background: linear-gradient(180deg, #e8a4c9 0%, #c4b5d4 35%, #a8c8dc 70%, #8fd3d8 100%);
+        border-radius: 20px;
+        padding: 50px 40px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+        animation: fadeIn 0.6s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* User Icon */
+    .user-icon {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .user-icon i {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.9);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Title */
+    .login-title {
+        text-align: center;
+        color: white;
+        font-size: 1.8rem;
+        font-weight: 300;
+        letter-spacing: 4px;
+        margin-bottom: 40px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Input Groups */
+    .input-group-gradient {
+        position: relative;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        padding-bottom: 10px;
+    }
+
+    .input-group-gradient .input-icon {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1rem;
+        margin-right: 15px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .input-group-gradient input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 0.95rem;
+        padding: 5px 0;
+        outline: none;
+    }
+
+    .input-group-gradient input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .input-group-gradient input:-webkit-autofill,
+    .input-group-gradient input:-webkit-autofill:hover,
+    .input-group-gradient input:-webkit-autofill:focus {
+        -webkit-text-fill-color: white;
+        -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
+    /* Form Options */
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        font-size: 0.8rem;
+    }
+
+    .remember-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+    }
+
+    .remember-check input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        accent-color: #4a5568;
+    }
+
+    .forgot-link {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .forgot-link:hover {
+        color: white;
+        text-decoration: underline;
+    }
+
+    /* Login Button */
+    .btn-gradient-login {
+        width: 100%;
+        padding: 14px;
+        background: #4a5568;
+        border: none;
+        border-radius: 25px;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient-login:hover {
+        background: #2d3748;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-gradient-login:active {
+        transform: translateY(0);
+    }
+
+    /* Student Login Link */
+    .student-link {
+        text-align: center;
+        margin-top: 25px;
+    }
+
+    .student-link a {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: color 0.2s;
+    }
+
+    .student-link a:hover {
+        color: white;
+    }
+
+    .student-link i {
+        margin-right: 5px;
+    }
+
+    /* Decorative Elements */
+    .admin-login-card::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+    }
+
+    .admin-login-card::after {
+        content: '';
+        position: absolute;
+        bottom: -30px;
+        left: -30px;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-login-page">
+    <!-- Login Card -->
+    <div class="admin-login-card">
+        <!-- User Icon -->
+        <div class="user-icon">
+            <i class="bi bi-person-circle"></i>
+        </div>
+
+        <!-- Title -->
+        <h1 class="login-title">Admin Login</h1>
+
+        <!-- Form -->
+        <form method="POST" action="{{ url_for('admin_login') }}">
+            <div class="input-group-gradient">
+                <i class="bi bi-envelope input-icon"></i>
+                <input type="text" name="username" placeholder="Username" required autofocus>
+            </div>
+
+            <div class="input-group-gradient">
+                <i class="bi bi-lock input-icon"></i>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+
+            <div class="form-options">
+                <label class="remember-check">
+                    <input type="checkbox"> Remember me
+                </label>
+                <a href="#" class="forgot-link">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn-gradient-login">Login</button>
+        </form>
+
+        <div class="student-link">
+            <a href="{{ url_for('login') }}">
+                <i class="bi bi-arrow-left"></i> Back to Student Login
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

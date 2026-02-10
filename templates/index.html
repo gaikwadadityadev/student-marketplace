@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Student Marketplace{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        min-height: 320px;
+    }
+
+    .hero-banner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200') center/cover;
+        opacity: 0.3;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-search {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .hero-search .form-control {
+        border-radius: 50px;
+        padding: 16px 24px;
+        font-size: 1rem;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-search .btn-search {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .hero-search .btn-search:hover {
+        transform: translateY(-50%) scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 91, 234, 0.4);
+    }
+
+    .hero-search .btn-search:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+
+    .hero-search .form-control:focus {
+        outline: none;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+        border: 2px solid #00c6fb;
+    }
+
+    /* Category Chips */
+    .category-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .category-chip {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #e0e0e0;
+        border-radius: 20px;
+        padding: 8px 20px;
+        font-size: 0.875rem;
+        color: #333;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .category-chip:hover {
+        background: #333;
+        color: white;
+        border-color: #333;
+        transform: translateY(-2px);
+    }
+
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .section-nav {
+        display: flex;
+        gap: 8px;
+    }
+
+    .section-nav-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid #ddd;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .section-nav-btn:hover {
+        background: #f5f5f5;
+        border-color: #999;
+    }
+
+    /* Product Carousel */
+    .product-carousel {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding: 10px 0 20px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .product-carousel::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Modern Product Card */
+    .modern-card {
+        flex: 0 0 220px;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .modern-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .modern-card-img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    }
+
+    .modern-card-body {
+        padding: 16px;
+    }
+
+    .modern-card-title {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #1a1a1a;
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .modern-card-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a1a1a;
+    }
+
+    .modern-card-seller {
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    /* Category Navigation */
+    .category-nav {
+        display: flex;
+        gap: 30px;
+        padding: 16px 0;
+        border-bottom: 1px solid #eee;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .category-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-nav-link {
+        font-size: 0.9rem;
+        color: #666;
+        text-decoration: none;
+        white-space: nowrap;
+        padding-bottom: 4px;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .category-nav-link:hover,
+    .category-nav-link.active {
+        color: #1a1a1a;
+        border-bottom-color: #1a1a1a;
+    }
+
+    /* Page Background */
+    .marketplace-bg {
+        background: linear-gradient(180deg, #f0f4f8 0%, #ffffff 100%);
+        min-height: 100vh;
+    }
+
+    /* Rating Badge */
+    .rating-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background: #26a541;
+        color: white;
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    /* View All Button */
+    .view-all-btn {
+        font-size: 0.875rem;
+        color: #005bea;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .view-all-btn:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="marketplace-bg">
+    <!-- Category Navigation -->
+    <div class="container">
+        <div class="category-nav">
+            <a href="{{ url_for('products') }}" class="category-nav-link active">All</a>
+            <a href="{{ url_for('products') }}?category=Books+%26+Notes" class="category-nav-link">Books & Notes</a>
+            <a href="{{ url_for('products') }}?category=Electronics" class="category-nav-link">Electronics</a>
+            <a href="{{ url_for('products') }}?category=Clothing" class="category-nav-link">Clothing</a>
+            <a href="{{ url_for('products') }}?category=Sports" class="category-nav-link">Sports</a>
+            <a href="{{ url_for('products') }}?category=Accessories" class="category-nav-link">Accessories</a>
+            <a href="{{ url_for('products') }}?category=Others" class="category-nav-link">Others</a>
+        </div>
+    </div>
+
+    <!-- Hero Banner -->
+    <div class="container py-4">
+        <div class="hero-banner p-5 text-center text-white">
+            <div class="hero-content">
+                <h1 class="display-5 fw-bold mb-3">Buy & Sell Within Campus</h1>
+                <p class="lead mb-4 opacity-90">Find amazing student deals on textbooks, electronics & more</p>
+
+                <!-- Search Bar -->
+                <div class="hero-search position-relative mx-auto mb-4">
+                    <form action="{{ url_for('products') }}" method="GET" id="heroSearchForm">
+                        <input type="text" name="search" id="heroSearchInput" class="form-control"
+                            placeholder="Search for books, electronics, clothing..." autocomplete="off"
+                            value="{{ request.args.get('search', '') }}">
+                        <button type="submit" class="btn-search" aria-label="Search">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Category Chips -->
+                <div class="category-chips">
+                    <a href="{{ url_for('products') }}?category=Books+%26+Notes" class="category-chip">📚 Books</a>
+                    <a href="{{ url_for('products') }}?category=Electronics" class="category-chip">💻 Electronics</a>
+                    <a href="{{ url_for('products') }}?category=Clothing" class="category-chip">👕 Clothing</a>
+                    <a href="{{ url_for('products') }}?category=Sports" class="category-chip">⚽ Sports</a>
+                    <a href="{{ url_for('products') }}?category=Accessories" class="category-chip">🎒 Accessories</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listed Recently Section -->
+    <div class="container py-4">
+        <div class="section-header">
+            <h2 class="section-title">Listed Recently</h2>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ url_for('products') }}" class="view-all-btn">View all</a>
+                <div class="section-nav">
+                    <button class="section-nav-btn" onclick="scrollCarousel(-1)">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="section-nav-btn" onclick="scrollCarousel(1)">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Carousel -->
+        <div class="product-carousel" id="productCarousel">
+            {% if products %}
+            {% for product in products %}
+            <a href="{{ url_for('product_view', product_id=product.product_id) }}" class="modern-card">
+                {% if product.image_path %}
+                <img src="{{ product.image_path | product_image }}" alt="{{ product.name }}" class="modern-card-img"
+                    onerror="this.onerror=null; this.parentElement.querySelector('.modern-card-img').innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 bg-light\'><i class=\'bi bi-image text-muted\' style=\'font-size: 3rem;\'></i></div>'; this.style.display='none'">
+                {% else %}
+                <div class="modern-card-img d-flex align-items-center justify-content-center">
+                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                <div class="modern-card-body">
+                    <div class="modern-card-title">{{ product.name }}</div>
+                    {% if product.avg_rating > 0 %}
+                    <span class="rating-badge mb-2">
+                        {{ product.avg_rating }} <i class="bi bi-star-fill"></i>
+                    </span>
+                    {% endif %}
+                    <div class="modern-card-price">₹{{ "%.0f"|format(product.price) }}</div>
+                    <div class="modern-card-seller">by {{ product.full_name }}</div>
+                </div>
+            </a>
+            {% endfor %}
+            {% else %}
+            <div class="text-center w-100 py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">No products yet. Be the first to list!</p>
+                <a href="{{ url_for('product_upload') }}" class="btn btn-primary">Sell Product</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="container py-4">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="p-4 rounded-4 h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h4 class="text-white fw-bold mb-2">Ready to sell?</h4>
+                    <p class="text-white opacity-75 mb-3">List your items and reach thousands of students</p>
+                    {% if session.user_id %}
+                    <a href="{{ url_for('product_upload') }}" class="btn btn-light fw-bold px-4">Start Selling</a>
+                    {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-light fw-bold px-4">Join Now</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-4 rounded-4 h-100" style="background: linear-gradient(135deg, #00c6fb 0%, #005bea 100%);">
+                    <h4 class="text-white fw-bold mb-2">Looking for deals?</h4>
+                    <p class="text-white opacity-75 mb-3">Browse through hundreds of student listings</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-light fw-bold px-4">Browse Products</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Carousel scroll function
+    function scrollCarousel(direction) {
+        const carousel = document.getElementById('productCarousel');
+        const scrollAmount = 250;
+        carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    }
+
+    // Enhanced search functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchForm = document.getElementById('heroSearchForm');
+        const searchInput = document.getElementById('heroSearchInput');
+
+        if (searchForm && searchInput) {
+            // Handle form submission
+            searchForm.addEventListener('submit', function (e) {
+                // Trim whitespace from search input
+                const searchValue = searchInput.value.trim();
+
+                // If empty after trimming, prevent submission
+                if (searchValue === '') {
+                    e.preventDefault();
+                    // Redirect to products page without search parameter
+                    window.location.href = '{{ url_for("products") }}';
+                    return false;
+                }
+
+                // Update input value with trimmed version
+                searchInput.value = searchValue;
+
+                // Add visual feedback
+                const button = searchForm.querySelector('.btn-search');
+                if (button) {
+                    button.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                }
+            });
+
+            // Add Enter key support
+            searchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchForm.submit();
+                }
+            });
+
+            // Clear button functionality (if search has value)
+            if (searchInput.value) {
+                // Add clear button
+                const clearBtn = document.createElement('button');
+                clearBtn.type = 'button';
+                clearBtn.className = 'btn-clear';
+                clearBtn.innerHTML = '<i class="bi bi-x"></i>';
+                clearBtn.style.cssText = 'position: absolute; right: 56px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #999; cursor: pointer; font-size: 1.2rem; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;';
+
+                clearBtn.addEventListener('click', function () {
+                    searchInput.value = '';
+                    searchInput.focus();
+                    this.remove();
+                });
+
+                searchForm.querySelector('.hero-search').appendChild(clearBtn);
+            }
+
+            // Show/hide clear button on input
+            searchInput.addEventListener('input', function () {
+                const clearBtn = searchForm.querySelector('.btn-clear');
+                if (this.value && !clearBtn) {
+                    const newClearBtn = document.createElement('button');
+                    newClearBtn.type = 'button';
+                    newClearBtn.className = 'btn-clear';
+                    newClearBtn.innerHTML = '<i class="bi bi-x"></i>';
+                    newClearBtn.style.cssText = 'position: absolute; right: 56px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #999; cursor: pointer; font-size: 1.2rem; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;';
+
+                    newClearBtn.addEventListener('mouseover', function () {
+                        this.style.color = '#333';
+                    });
+                    newClearBtn.addEventListener('mouseout', function () {
+                        this.style.color = '#999';
+                    });
+                    newClearBtn.addEventListener('click', function () {
+                        searchInput.value = '';
+                        searchInput.focus();
+                        this.remove();
+                    });
+
+                    searchForm.querySelector('.hero-search').appendChild(newClearBtn);
+                } else if (!this.value && clearBtn) {
+                    clearBtn.remove();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
