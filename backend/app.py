@@ -574,9 +574,9 @@ def register():
             flash('All fields are required', 'danger')
             return render_template('register.html')
         
-        # College ID validation: exactly 12 digits, starts with 2023 or 2024
-        if not re.match(r'^(2023|2024)\d{8}$', college_id):
-            flash('Invalid College ID. It must be 12 digits and follow format 2023XXXXXXXX', 'danger')
+        # College ID validation: 12 digits starting with 2023-2026 (or empty = skip)
+        if college_id and not re.match(r'^(202[3-6])\d{8}$', college_id):
+            flash('Invalid College ID. Must be 12 digits starting with 2023, 2024, 2025, or 2026.', 'danger')
             return render_template('register.html')
         
         try:

@@ -475,14 +475,13 @@
                 <input type="tel" class="form-input" name="phone" placeholder="+1 (555) 000-0000">
             </div>
 
-            <!-- College ID -->
             <div class="form-group">
-                <label class="form-label">College ID <span style="font-size:0.75rem;opacity:0.8;">(12 digits, starts
-                        with 2023 or 2024)</span></label>
+                <label class="form-label">College ID <span style="font-size:0.75rem;opacity:0.8;">(Optional - 12 digits, starts
+                        with 2023, 2024, 2025, or 2026)</span></label>
                 <input type="text" class="form-input" name="college_id" id="collegeIdInput"
-                    placeholder="e.g. 202301020012" maxlength="12" required>
+                    placeholder="e.g. 202301020012 (optional)" maxlength="12">
                 <span id="collegeIdError"
-                    style="display:none;color:#ff4757;font-size:0.8rem;margin-top:6px;display:none;padding-left:4px;"></span>
+                    style="display:none;color:#ff4757;font-size:0.8rem;margin-top:6px;padding-left:4px;"></span>
             </div>
 
             <!-- Password -->
@@ -567,8 +566,9 @@
     const collegeIdError = document.getElementById('collegeIdError');
 
     function validateCollegeId(value) {
-        // Must be exactly 12 digits and start with 2023 or 2024
-        return /^(2023|2024)\d{8}$/.test(value);
+        // Must be exactly 12 digits and start with 2023-2026 (or empty = valid)
+        if (!value) return true;
+        return /^(202[3-6])\d{8}$/.test(value);
     }
 
     function showCollegeIdError(msg) {
@@ -603,9 +603,9 @@
 
     registerForm.addEventListener('submit', function (e) {
         const val = collegeIdInput.value.trim();
-        if (!validateCollegeId(val)) {
+        if (val && !validateCollegeId(val)) {
             e.preventDefault();
-            showCollegeIdError('Invalid College ID. It must be 12 digits and follow format 2023XXXXXXXX');
+            showCollegeIdError('Invalid College ID. Must be 12 digits starting with 2023, 2024, 2025, or 2026.');
             collegeIdInput.focus();
             return;
         }
