@@ -530,6 +530,33 @@ def version():
     })
 
 
+@app.route('/admin-check')
+def admin_check():
+    """Debug route: verify admin user exists and password is correct."""
+    result = {'admin_found': False, 'password_ok': False, 'error': None, 'user': None}
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT user_id, username, role, status, password FROM users WHERE role='admin'")
+            ).mappings().first()
+            if row:
+                u = dict(row)
+                result['admin_found'] = True
+                result['user'] = {
+                    'user_id': u['user_id'],
+                    'username': u['username'],
+                    'role': u['role'],
+                    'status': u['status'],
+                    'hash_prefix': u['password'][:20] + '...'
+                }
+                admin_pass = os.getenv('ADMIN_PASSWORD', 'Aditya@2103')
+                result['password_ok'] = check_password(admin_pass, u['password'])
+                result['env_admin_password_used'] = admin_pass
+    except Exception as e:
+        result['error'] = str(e)
+    return jsonify(result)
+
+
 # ==================== STUDENT REGISTRATION ====================
 @app.route('/register', methods=['GET', 'POST'])
 def register():
