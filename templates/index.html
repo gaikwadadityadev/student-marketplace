@@ -140,19 +140,49 @@
         border-color: #999;
     }
 
-    /* Product Carousel */
-    .product-carousel {
-        display: flex;
-        gap: 20px;
-        overflow-x: auto;
-        scroll-behavior: smooth;
-        padding: 10px 0 20px;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
+    /* =============================================
+       SCROLL-TRIGGERED REVEAL — Listed Recently
+       ============================================= */
+
+
+    /* Section header fades in from above */
+    .slider-section .section-header {
+        opacity: 0;
+        transform: translateY(-16px);
+        transition: opacity 0.55s ease, transform 0.55s ease;
     }
 
-    .product-carousel::-webkit-scrollbar {
-        display: none;
+    .slider-section.header-visible .section-header {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Each card starts hidden and slides up */
+    .modern-card {
+        opacity: 0;
+        transform: translateY(40px);
+        /* transition is set by JS per-card for stagger */
+    }
+
+    /* When JS adds .card-visible the card fully appears */
+    .modern-card.card-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .slider-viewport {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        padding: 10px 0 16px;
+    }
+
+    /* The moving track that holds all cards */
+    .slider-track {
+        display: flex;
+        gap: 20px;
+        will-change: transform;
+        transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
     /* Modern Product Card */
@@ -162,14 +192,74 @@
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         text-decoration: none;
         color: inherit;
+        /* Ensure cards stay clickable */
+        position: relative;
+        z-index: 1;
     }
 
     .modern-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        /* Override the scroll-reveal translate so hover always works after reveal */
+        transform: translateY(-8px) scale(1.03) !important;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+    }
+
+    /* Arrow Buttons */
+    .slider-arrow {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1.5px solid #dde3f0;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.10);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+        font-size: 1rem;
+        color: #444;
+        flex-shrink: 0;
+    }
+
+    .slider-arrow:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+        transform: scale(1.08);
+    }
+
+    .slider-arrow:active {
+        transform: scale(0.95);
+    }
+
+    /* Dot Indicators */
+    .slider-dots {
+        display: flex;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 18px;
+    }
+
+    .slider-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d0d7e8;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        transition: background 0.25s, transform 0.25s, width 0.25s;
+        flex-shrink: 0;
+    }
+
+    .slider-dot.active {
+        background: #667eea;
+        width: 22px;
+        border-radius: 4px;
     }
 
     .modern-card-img {
@@ -315,55 +405,73 @@
     </div>
 
     <!-- Listed Recently Section -->
-    <div class="container py-4">
+    <div class="container py-4 slider-section" id="recentlySection">
         <div class="section-header">
             <h2 class="section-title">Listed Recently</h2>
             <div class="d-flex align-items-center gap-3">
                 <a href="{{ url_for('products') }}" class="view-all-btn">View all</a>
                 <div class="section-nav">
-                    <button class="section-nav-btn" onclick="scrollCarousel(-1)">
+                    <button class="slider-arrow" id="sliderPrev" aria-label="Previous">
                         <i class="bi bi-chevron-left"></i>
                     </button>
-                    <button class="section-nav-btn" onclick="scrollCarousel(1)">
+                    <button class="slider-arrow" id="sliderNext" aria-label="Next">
                         <i class="bi bi-chevron-right"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Product Carousel -->
-        <div class="product-carousel" id="productCarousel">
-            {% if products %}
-            {% for product in products %}
-            <a href="{{ url_for('product_view', product_id=product.product_id) }}" class="modern-card">
-                {% if product.image_path %}
-                <img src="{{ product.image_path | product_image }}" alt="{{ product.name }}" class="modern-card-img"
-                    onerror="this.onerror=null; this.parentElement.querySelector('.modern-card-img').innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100 bg-light\'><i class=\'bi bi-image text-muted\' style=\'font-size: 3rem;\'></i></div>'; this.style.display='none'">
+        <!-- Slider Viewport -->
+        <div class="slider-viewport" id="sliderViewport">
+            <div class="slider-track" id="sliderTrack">
+                {% if products %}
+                {% for product in products %}
+                <a href="{{ url_for('product_view', product_id=product.product_id) }}" class="modern-card">
+                    {% if product.image_path %}
+                    <img src="{{ url_for('static', filename=product.image_path) }}" alt="{{ product.name }}"
+                        class="modern-card-img"
+                        onerror="this.onerror=null; this.style.display='none'; var p=this.parentElement; var d=document.createElement('div'); d.className='modern-card-img d-flex align-items-center justify-content-center'; d.innerHTML='<i class=\'bi bi-image text-muted\' style=\'font-size:3rem;\'></i>'; p.insertBefore(d,this);">
+                    {% else %}
+                    <div class="modern-card-img d-flex align-items-center justify-content-center">
+                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="modern-card-body">
+                        <div class="modern-card-title">{{ product.name }}</div>
+                        {% if product.avg_rating > 0 %}
+                        <span class="rating-badge mb-2">
+                            {{ product.avg_rating }} <i class="bi bi-star-fill"></i>
+                        </span>
+                        {% endif %}
+                        <div class="mb-1">
+                            {% set stock_val = (product.stock | default(0)) or 0 %}
+                            {% if stock_val > 5 %}
+                            <span class="badge bg-success bg-opacity-75" style="font-size: 0.70rem;">In Stock: {{
+                                stock_val }} items</span>
+                            {% elif stock_val > 0 %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.70rem;">Only {{ stock_val }}
+                                left!</span>
+                            {% else %}
+                            <span class="badge bg-danger" style="font-size: 0.70rem;">Out of Stock</span>
+                            {% endif %}
+                        </div>
+                        <div class="modern-card-price">₹{{ "%.0f"|format(product.price) }}</div>
+                        <div class="modern-card-seller">by {{ product.full_name }}</div>
+                    </div>
+                </a>
+                {% endfor %}
                 {% else %}
-                <div class="modern-card-img d-flex align-items-center justify-content-center">
-                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                <div class="text-center w-100 py-5">
+                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">No products yet. Be the first to list!</p>
+                    <a href="{{ url_for('product_upload') }}" class="btn btn-primary">Sell Product</a>
                 </div>
                 {% endif %}
-                <div class="modern-card-body">
-                    <div class="modern-card-title">{{ product.name }}</div>
-                    {% if product.avg_rating > 0 %}
-                    <span class="rating-badge mb-2">
-                        {{ product.avg_rating }} <i class="bi bi-star-fill"></i>
-                    </span>
-                    {% endif %}
-                    <div class="modern-card-price">₹{{ "%.0f"|format(product.price) }}</div>
-                    <div class="modern-card-seller">by {{ product.full_name }}</div>
-                </div>
-            </a>
-            {% endfor %}
-            {% else %}
-            <div class="text-center w-100 py-5">
-                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-3">No products yet. Be the first to list!</p>
-                <a href="{{ url_for('product_upload') }}" class="btn btn-primary">Sell Product</a>
             </div>
-            {% endif %}
         </div>
+
+        <!-- Dot Indicators -->
+        <div class="slider-dots" id="sliderDots"></div>
     </div>
 
     <!-- Quick Actions -->
@@ -392,12 +500,204 @@
 </div>
 
 <script>
-    // Carousel scroll function
-    function scrollCarousel(direction) {
-        const carousel = document.getElementById('productCarousel');
-        const scrollAmount = 250;
-        carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-    }
+    // =============================================
+    // MODERN AUTO-SLIDING CAROUSEL
+    // =============================================
+    (function () {
+        const track = document.getElementById('sliderTrack');
+        const viewport = document.getElementById('sliderViewport');
+        const prevBtn = document.getElementById('sliderPrev');
+        const nextBtn = document.getElementById('sliderNext');
+        const dotsContainer = document.getElementById('sliderDots');
+
+        if (!track || !viewport) return;   // guard: no products
+
+        const cards = Array.from(track.querySelectorAll('.modern-card'));
+        const totalCards = cards.length;
+        if (totalCards === 0) return;
+
+        const CARD_WIDTH = 220;   // px  (matches .modern-card flex-basis)
+        const GAP = 20;    // px  (matches .slider-track gap)
+        const STEP = CARD_WIDTH + GAP;  // pixels per slide step
+        const AUTO_MS = 3500; // auto-slide interval ms
+
+        let currentOffset = 0;  // current translateX (negative px)
+        let autoTimer = null;
+        let isHovered = false;
+
+        // ---- Calculate how many cards fit in the viewport at once ----
+        function visibleCount() {
+            return Math.max(1, Math.floor((viewport.clientWidth + GAP) / STEP));
+        }
+
+        // ---- Maximum offset we can scroll to ----
+        function maxOffset() {
+            const maxPages = Math.max(0, totalCards - visibleCount());
+            return maxPages * STEP;
+        }
+
+        // ---- Apply translateX to the track ----
+        function applyOffset(offset, animate) {
+            track.style.transition = animate
+                ? 'transform 0.52s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                : 'none';
+            track.style.transform = 'translateX(' + (-offset) + 'px)';
+        }
+
+        // ---- Build dot indicators ----
+        function buildDots() {
+            dotsContainer.innerHTML = '';
+            const pages = Math.ceil(totalCards / visibleCount());
+            for (let i = 0; i < pages; i++) {
+                const dot = document.createElement('button');
+                dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+                dot.setAttribute('aria-label', 'Go to page ' + (i + 1));
+                dot.addEventListener('click', function () {
+                    goToPage(i);
+                    resetTimer();
+                });
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function updateDots() {
+            const dots = dotsContainer.querySelectorAll('.slider-dot');
+            const page = Math.round(currentOffset / (STEP * visibleCount()));
+            dots.forEach(function (d, i) {
+                d.classList.toggle('active', i === page);
+            });
+        }
+
+        function currentPage() {
+            return Math.round(currentOffset / (STEP * visibleCount()));
+        }
+
+        function goToPage(page) {
+            const vc = visibleCount();
+            const pages = Math.ceil(totalCards / vc);
+            const clampedPage = Math.max(0, Math.min(page, pages - 1));
+            currentOffset = clampedPage * vc * STEP;
+            currentOffset = Math.min(currentOffset, maxOffset());
+            applyOffset(currentOffset, true);
+            updateDots();
+        }
+
+        // ---- Arrow navigation ----
+        function slide(direction) {
+            const vc = visibleCount();
+            const maxOff = maxOffset();
+            currentOffset += direction * vc * STEP;
+
+            // Wrap-around
+            if (currentOffset > maxOff) currentOffset = 0;
+            if (currentOffset < 0) currentOffset = maxOff;
+
+            applyOffset(currentOffset, true);
+            updateDots();
+        }
+
+        prevBtn && prevBtn.addEventListener('click', function () {
+            slide(-1);
+            resetTimer();
+        });
+        nextBtn && nextBtn.addEventListener('click', function () {
+            slide(1);
+            resetTimer();
+        });
+
+        // ---- Auto-slide ----
+        function startTimer() {
+            autoTimer = setInterval(function () {
+                if (!isHovered) slide(1);
+            }, AUTO_MS);
+        }
+
+        function resetTimer() {
+            clearInterval(autoTimer);
+            startTimer();
+        }
+
+        // ---- Pause on hover ----
+        viewport.addEventListener('mouseenter', function () { isHovered = true; });
+        viewport.addEventListener('mouseleave', function () { isHovered = false; });
+
+        // ---- Touch / swipe support ----
+        var touchStartX = 0;
+        viewport.addEventListener('touchstart', function (e) {
+            touchStartX = e.changedTouches[0].clientX;
+        }, { passive: true });
+        viewport.addEventListener('touchend', function (e) {
+            var dx = e.changedTouches[0].clientX - touchStartX;
+            if (Math.abs(dx) > 40) {
+                slide(dx < 0 ? 1 : -1);
+                resetTimer();
+            }
+        }, { passive: true });
+
+        // ---- Rebuild on resize ----
+        var resizeTimer;
+        window.addEventListener('resize', function () {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function () {
+                currentOffset = 0;
+                applyOffset(0, false);
+                buildDots();
+            }, 150);
+        });
+
+        // ---- Init ----
+        buildDots();
+        applyOffset(0, false);
+        startTimer();
+    })();
+
+    // =============================================
+    // SCROLL-REVEAL via Intersection Observer
+    // =============================================
+    (function () {
+        var section = document.getElementById('recentlySection');
+        if (!section) return;
+
+        var cards = Array.from(section.querySelectorAll('.modern-card'));
+
+        // ---- Stagger transition delays on cards ----
+        cards.forEach(function (card, i) {
+            // base duration + stagger: first card 0ms delay, each next +70ms
+            var delay = i * 70;
+            card.style.transition =
+                'opacity 0.55s ease ' + delay + 'ms, ' +
+                'transform 0.55s cubic-bezier(0.22,1,0.36,1) ' + delay + 'ms, ' +
+                'box-shadow 0.3s ease';   // keep hover shadow smooth
+        });
+
+        // ---- Observer for the section header ----
+        var headerObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    section.classList.add('header-visible');
+                    headerObserver.disconnect();
+                }
+            });
+        }, { threshold: 0.2 });
+        headerObserver.observe(section);
+
+        // ---- Observer for each card ----
+        var cardObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('card-visible');
+                    cardObserver.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -40px 0px'  // trigger slightly before the bottom of the viewport
+        });
+
+        cards.forEach(function (card) {
+            cardObserver.observe(card);
+        });
+    })();
 
     // Enhanced search functionality
     document.addEventListener('DOMContentLoaded', function () {

@@ -99,4 +99,11 @@ yarn-error.log
 # Redis (if used for rate limiting)
 dump.rdb
 
+# Report Documents (local only)
+Report Document/
 
+# Local test/debug scripts
+backend/fix_*.py
+backend/test_*.py
+backend/verify_*.py
+backend/setup_*.py

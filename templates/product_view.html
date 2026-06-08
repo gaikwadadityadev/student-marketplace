@@ -21,7 +21,8 @@
         Essentials' or product.category == 'Accessories') and product.image_path %}
         <div class="col-md-5 mb-4 mb-md-0">
             <div class="bg-light rounded overflow-hidden shadow-sm sticky-top" style="top: 90px;">
-                <img src="{{ product.image_path | product_image }}" class="img-fluid w-100" alt="{{ product.name }}">
+                <img src="{{ url_for('static', filename=product.image_path) }}" class="img-fluid w-100"
+                    alt="{{ product.name }}">
             </div>
         </div>
         <div class="col-md-7">
@@ -45,17 +46,32 @@
                     <span class="text-muted small ms-2">Inclusive of all taxes</span>
                 </div>
 
+                <!-- Stock Badge -->
+                <div class="mb-3">
+                    {% set stock_val = (product.stock | default(0)) or 0 %}
+                    {% if stock_val > 5 %}
+                    <span class="badge bg-success" style="font-size: 0.85rem;">In Stock: {{ stock_val }} items</span>
+                    {% elif stock_val > 0 %}
+                    <span class="badge bg-warning text-dark" style="font-size: 0.85rem;">Only {{ stock_val }}
+                        left!</span>
+                    {% else %}
+                    <span class="badge bg-danger" style="font-size: 0.85rem;">Out of Stock</span>
+                    {% endif %}
+                </div>
+
                 <div class="d-flex gap-2 mb-4">
                     {% if session.user_id and session.user_id != product.seller_id %}
                     <form method="POST" action="{{ url_for('cart_add', product_id=product.product_id) }}"
                         class="flex-grow-1">
-                        <button type="submit" class="btn btn-primary w-100 py-2" id="addToCartBtn">
+                        <button type="submit" class="btn btn-primary w-100 py-2" id="addToCartBtn" {% if stock_val <=0
+                            %}disabled{% endif %}>
                             <i class="bi bi-cart-plus-fill"></i> ADD TO CART
                         </button>
                     </form>
                     <form method="POST" action="{{ url_for('cart_add', product_id=product.product_id) }}"
                         class="flex-grow-1" id="buyNowForm">
-                        <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-white" id="buyNowBtn">
+                        <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-white" id="buyNowBtn" {% if
+                            product.stock <=0 %}disabled{% endif %}>
                             <i class="bi bi-lightning-fill"></i> BUY NOW
                         </button>
                     </form>
@@ -133,7 +149,7 @@
                             <div class="rating-bar flex-grow-1">
                                 {% set percentage = (rating_dist[rating] / product.review_count * 100) if
                                 product.review_count > 0 else 0 %}
-                                <div class="rating-fill" style="width: {{ percentage }}%"></div>
+                                <div class="rating-fill" style="--pct: {{ percentage | round(1) }}%"></div>
                             </div>
                             <span class="text-muted small ms-2 text-end" style="width: 30px;">{{ rating_dist[rating]
                                 }}</span>

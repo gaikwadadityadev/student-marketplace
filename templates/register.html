@@ -475,6 +475,16 @@
                 <input type="tel" class="form-input" name="phone" placeholder="+1 (555) 000-0000">
             </div>
 
+            <!-- College ID -->
+            <div class="form-group">
+                <label class="form-label">College ID <span style="font-size:0.75rem;opacity:0.8;">(12 digits, starts
+                        with 2023 or 2024)</span></label>
+                <input type="text" class="form-input" name="college_id" id="collegeIdInput"
+                    placeholder="e.g. 202301020012" maxlength="12" required>
+                <span id="collegeIdError"
+                    style="display:none;color:#ff4757;font-size:0.8rem;margin-top:6px;display:none;padding-left:4px;"></span>
+            </div>
+
             <!-- Password -->
             <div class="form-group">
                 <label class="form-label">Password</label>
@@ -552,11 +562,53 @@
         return strength;
     }
 
+    // ==================== COLLEGE ID VALIDATION ====================
+    const collegeIdInput = document.getElementById('collegeIdInput');
+    const collegeIdError = document.getElementById('collegeIdError');
+
+    function validateCollegeId(value) {
+        // Must be exactly 12 digits and start with 2023 or 2024
+        return /^(2023|2024)\d{8}$/.test(value);
+    }
+
+    function showCollegeIdError(msg) {
+        collegeIdError.textContent = msg;
+        collegeIdError.style.display = 'block';
+        collegeIdInput.style.borderColor = '#ff4757';
+    }
+
+    function clearCollegeIdError() {
+        collegeIdError.style.display = 'none';
+        collegeIdError.textContent = '';
+        collegeIdInput.style.borderColor = '';
+    }
+
+    collegeIdInput.addEventListener('input', function () {
+        const val = this.value.trim();
+        if (val.length === 0) {
+            clearCollegeIdError();
+            return;
+        }
+        if (validateCollegeId(val)) {
+            clearCollegeIdError();
+            collegeIdInput.style.borderColor = '#26de81';
+        } else {
+            showCollegeIdError('Invalid College ID. It must be 12 digits and follow format 2023XXXXXXXX');
+        }
+    });
+
     // Form submission animation
     const registerForm = document.getElementById('registerForm');
     const submitBtn = document.querySelector('.btn-submit');
 
     registerForm.addEventListener('submit', function (e) {
+        const val = collegeIdInput.value.trim();
+        if (!validateCollegeId(val)) {
+            e.preventDefault();
+            showCollegeIdError('Invalid College ID. It must be 12 digits and follow format 2023XXXXXXXX');
+            collegeIdInput.focus();
+            return;
+        }
         submitBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Creating Account...';
         submitBtn.style.pointerEvents = 'none';
     });

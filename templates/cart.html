@@ -21,7 +21,7 @@
                         <!-- Image -->
                         <div class="flex-shrink-0" style="width: 100px; height: 100px;">
                             {% if item.image_path %}
-                            <img src="{{ item.image_path|product_image }}" alt="{{ item.name }}"
+                            <img src="{{ url_for('static', filename=item.image_path) }}" alt="{{ item.name }}"
                                 class="w-100 h-100 object-fit-cover rounded border">
                             {% else %}
                             <div

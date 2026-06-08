@@ -3,6 +3,7 @@ Student Marketplace - Flask Backend Application
 Main application file with all routes and business logic
 """
 import os
+import re
 import bcrypt
 from datetime import datetime
 import traceback
@@ -39,6 +40,8 @@ def product_image_filter(image_path):
 
 # Create upload directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+PRODUCTS_UPLOAD_DIR = os.path.join(app.config['UPLOAD_FOLDER'], 'products')
+os.makedirs(PRODUCTS_UPLOAD_DIR, exist_ok=True)
 
 # Database engine
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], pool_pre_ping=True)
@@ -165,10 +168,16 @@ def register():
         password = request.form.get('password', '')
         full_name = request.form.get('full_name', '').strip()
         phone = request.form.get('phone', '').strip()
+        college_id = request.form.get('college_id', '').strip()
         
         # Validation
         if not all([username, email, password, full_name]):
             flash('All fields are required', 'danger')
+            return render_template('register.html')
+        
+        # College ID validation: exactly 12 digits, starts with 2023 or 2024
+        if not re.match(r'^(2023|2024)\d{8}$', college_id):
+            flash('Invalid College ID. It must be 12 digits and follow format 2023XXXXXXXX', 'danger')
             return render_template('register.html')
         
         try:
@@ -183,8 +192,8 @@ def register():
                 
                 # Insert new user with prepared statement
                 insert_query = text("""
-                    INSERT INTO users (username, email, password, full_name, phone, role, status)
-                    VALUES (:username, :email, :password, :full_name, :phone, 'student', 'active')
+                    INSERT INTO users (username, email, password, full_name, phone, college_id, role, status)
+                    VALUES (:username, :email, :password, :full_name, :phone, :college_id, 'student', 'active')
                 """)
                 hashed_password = hash_password(password)
                 conn.execute(insert_query, {
@@ -192,7 +201,8 @@ def register():
                     'email': email,
                     'password': hashed_password,
                     'full_name': full_name,
-                    'phone': phone
+                    'phone': phone,
+                    'college_id': college_id
                 })
                 conn.commit()
                 
@@ -295,7 +305,6 @@ def dashboard():
     
     try:
         user_id = session.get('user_id')
-        print(f"DEBUG: dashboard - user_id from session: {user_id}")
         
         with engine.connect() as conn:
             # Get user's products
@@ -321,7 +330,6 @@ def dashboard():
             orders_raw = conn.execute(orders_query, {'user_id': user_id}).mappings().all()
             orders = [dict(o) for o in orders_raw]
             
-            print(f"DEBUG: dashboard - Found {len(orders)} orders for user {user_id}")
             
             return render_template('dashboard.html', products=my_products, orders=orders)
     except Exception as e:
@@ -340,6 +348,7 @@ def product_upload():
         description = request.form.get('description', '').strip()
         price = request.form.get('price', '0')
         category = request.form.get('category', '').strip()
+        stock = request.form.get('stock', '0')
         image = request.files.get('image')
         
         # Validation
@@ -352,24 +361,34 @@ def product_upload():
             if price <= 0:
                 flash('Price must be greater than 0', 'danger')
                 return render_template('product_upload.html')
+                
+            stock = int(stock)
+            if stock < 0:
+                flash('Stock cannot be negative', 'danger')
+                return render_template('product_upload.html')
         except ValueError:
-            flash('Invalid price', 'danger')
+            flash('Invalid price or stock', 'danger')
             return render_template('product_upload.html')
         
         # Handle image upload
         image_path = None
         if image and image.filename and allowed_file(image.filename):
             filename = secure_filename(f"{session['user_id']}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{image.filename}")
-            image_path = os.path.join('uploads', filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Ensure products directory exists
+            products_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'products')
+            os.makedirs(products_dir, exist_ok=True)
+            
+            file_path = os.path.join(products_dir, filename)
             image.save(file_path)
+            # Store relative path for database: uploads/products/filename
+            image_path = f"uploads/products/{filename}"
         
         try:
             with engine.connect() as conn:
                 # Insert product with prepared statement
                 insert_query = text("""
-                    INSERT INTO products (seller_id, name, description, price, category, image_path, status)
-                    VALUES (:seller_id, :name, :description, :price, :category, :image_path, 'pending')
+                    INSERT INTO products (seller_id, name, description, price, category, stock, image_path, status)
+                    VALUES (:seller_id, :name, :description, :price, :category, :stock, :image_path, 'pending')
                 """)
                 conn.execute(insert_query, {
                     'seller_id': session['user_id'],
@@ -377,6 +396,7 @@ def product_upload():
                     'description': description,
                     'price': price,
                     'category': category,
+                    'stock': stock,
                     'image_path': image_path
                 })
                 conn.commit()
@@ -428,9 +448,14 @@ def product_edit(product_id):
                 image_path = product.get('image_path')
                 if image and image.filename and allowed_file(image.filename):
                     filename = secure_filename(f"{session['user_id']}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{image.filename}")
-                    image_path = os.path.join('uploads', filename)
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    # Ensure products directory exists
+                    products_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'products')
+                    os.makedirs(products_dir, exist_ok=True)
+                    
+                    file_path = os.path.join(products_dir, filename)
                     image.save(file_path)
+                    # Store relative path for database: uploads/products/filename
+                    image_path = f"uploads/products/{filename}"
                 
                 # Update product with prepared statement
                 update_query = text("""
@@ -676,22 +701,31 @@ def cart_add(product_id):
     try:
         with engine.connect() as conn:
             # Check if product exists and is approved
-            product_query = text("SELECT product_id FROM products WHERE product_id = :product_id AND status = 'approved'")
+            product_query = text("SELECT product_id, stock FROM products WHERE product_id = :product_id AND status = 'approved'")
             product = conn.execute(product_query, {'product_id': product_id}).mappings().first()
             
             if not product:
                 flash('Product not available', 'danger')
                 return redirect(url_for('products'))
             
+            # NULL-safe stock — treat None as 0
+            available_stock = int(product['stock'] or 0)
+            
             # Check if already in cart
             check_query = text("SELECT cart_id, quantity FROM cart WHERE user_id = :user_id AND product_id = :product_id")
             existing = conn.execute(check_query, {'user_id': session['user_id'], 'product_id': product_id}).mappings().first()
             
             if existing:
+                if existing['quantity'] + 1 > available_stock:
+                    flash('Cannot add more than available stock', 'warning')
+                    return redirect(url_for('cart'))
                 # Update quantity
                 update_query = text("UPDATE cart SET quantity = quantity + 1 WHERE cart_id = :cart_id")
                 conn.execute(update_query, {'cart_id': existing['cart_id']})
             else:
+                if available_stock < 1:
+                    flash('This product is out of stock', 'warning')
+                    return redirect(url_for('products'))
                 # Insert new cart item
                 insert_query = text("INSERT INTO cart (user_id, product_id, quantity) VALUES (:user_id, :product_id, 1)")
                 conn.execute(insert_query, {'user_id': session['user_id'], 'product_id': product_id})
@@ -766,7 +800,7 @@ def checkout():
                     
                 # Get cart items
                 cart_query = text("""
-                    SELECT c.*, p.price, p.name
+                    SELECT c.*, p.price, p.name, p.stock
                     FROM cart c
                     JOIN products p ON c.product_id = p.product_id
                     WHERE c.user_id = :user_id AND p.status = 'approved'
@@ -801,10 +835,13 @@ def checkout():
                 else:
                     order_id = conn.execute(text("SELECT LAST_INSERT_ID()")).scalar()
                 
-                print(f"DEBUG: Order created with ID: {order_id}")
                 
-                # Create order items
+                # Create order items — check stock and deduct atomically
                 for item in cart_items:
+                    item_stock = int(item['stock'] or 0)  # NULL-safe
+                    if item['quantity'] > item_stock:
+                        raise ValueError(f"Not enough stock for '{item['name']}'. Available: {item_stock}, Requested: {item['quantity']}")
+                
                     item_query = text("""
                         INSERT INTO order_items (order_id, product_id, quantity, price)
                         VALUES (:order_id, :product_id, :quantity, :price)
@@ -814,6 +851,13 @@ def checkout():
                         'product_id': item['product_id'],
                         'quantity': item['quantity'],
                         'price': item['price']
+                    })
+                    
+                    # Deduct stock
+                    update_stock_query = text("UPDATE products SET stock = stock - :quantity WHERE product_id = :product_id")
+                    conn.execute(update_stock_query, {
+                        'quantity': item['quantity'],
+                        'product_id': item['product_id']
                     })
                 
                 # Clear cart
@@ -872,7 +916,6 @@ def order_history():
     """Order history page"""
     try:
         user_id = session.get('user_id')
-        print(f"DEBUG: order_history - user_id from session: {user_id}")
         
         with engine.connect() as conn:
             query = text("""
@@ -891,10 +934,6 @@ def order_history():
             
             # Convert to list of dicts to ensure template can access
             orders = [dict(order) for order in orders_raw]
-            
-            print(f"DEBUG: order_history - Found {len(orders)} orders for user {user_id}")
-            for order in orders:
-                print(f"DEBUG: Order #{order['order_id']} - Status: {order['status']}, Amount: {order['total_amount']}")
             
             return render_template('order_history.html', orders=orders)
     except Exception as e:

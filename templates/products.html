@@ -49,7 +49,7 @@
                     <div class="card h-100 product-card shadow-sm border-0">
                         {% if product.image_path %}
                         <div class="position-relative bg-light overflow-hidden" style="height: 200px;">
-                            <img src="{{ product.image_path | product_image }}" class="w-100 h-100"
+                            <img src="{{ url_for('static', filename=product.image_path) }}" class="w-100 h-100"
                                 alt="{{ product.name }}" style="object-fit: cover;"
                                 onerror="this.parentElement.innerHTML='<div class=\'d-flex align-items-center justify-content-center h-100\'><i class=\'bi bi-image text-muted\' style=\'font-size: 3rem;\'></i></div>'">
                         </div>
@@ -69,6 +69,19 @@
                                     {{ product.name }}
                                 </a>
                             </h5>
+
+                            <div class="mb-2">
+                                {% set stock_val = (product.stock | default(0)) %}
+                                {% if stock_val > 5 %}
+                                <span class="badge bg-success bg-opacity-75" style="font-size: 0.75rem;">In Stock: {{
+                                    stock_val }} items</span>
+                                {% elif stock_val > 0 %}
+                                <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">Only {{ stock_val
+                                    }} left!</span>
+                                {% else %}
+                                <span class="badge bg-danger" style="font-size: 0.75rem;">Out of Stock</span>
+                                {% endif %}
+                            </div>
 
                             <div class="d-flex align-items-center mb-2">
                                 {% if product.avg_rating > 0 %}

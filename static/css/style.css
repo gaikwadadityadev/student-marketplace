@@ -3,12 +3,17 @@
 /* ==================== THEME VARIABLES ==================== */
 :root {
     /* Core brand palette - modern, student-friendly */
-    --sm-primary: #3949ab;          /* Deep indigo / primary */
-    --sm-primary-dark: #283593;     /* Darker indigo for hover */
-    --sm-primary-soft: #e8eaf6;     /* Soft background tint */
+    --sm-primary: #3949ab;
+    /* Deep indigo / primary */
+    --sm-primary-dark: #283593;
+    /* Darker indigo for hover */
+    --sm-primary-soft: #e8eaf6;
+    /* Soft background tint */
 
-    --sm-accent: #ffb300;           /* Warm accent (yellow/orange) */
-    --sm-accent-strong: #fb641b;    /* Strong CTA (Buy Now) */
+    --sm-accent: #ffb300;
+    /* Warm accent (yellow/orange) */
+    --sm-accent-strong: #fb641b;
+    /* Strong CTA (Buy Now) */
     --sm-accent-dark: #e65a10;
 
     --sm-success: #26a541;
@@ -16,8 +21,10 @@
     --sm-warning: #ffa000;
     --sm-info: #00acc1;
 
-    --sm-bg: #f5f6fb;               /* App background */
-    --sm-surface: #ffffff;          /* Cards / panels */
+    --sm-bg: #f5f6fb;
+    /* App background */
+    --sm-surface: #ffffff;
+    /* Cards / panels */
     --sm-border-subtle: #e0e3ef;
 
     --sm-text-main: #1f2933;
@@ -83,7 +90,7 @@ main {
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
 }
 
 .card-img-top {
@@ -122,17 +129,19 @@ main {
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.18);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
 }
 
 /* Forms */
-.form-control, .form-select {
+.form-control,
+.form-select {
     border-radius: 5px;
     border: 1px solid #ddd;
     transition: border-color 0.3s ease;
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
     border-color: var(--sm-primary);
     box-shadow: 0 0 0 0.2rem rgba(57, 73, 171, 0.25);
 }
@@ -156,9 +165,11 @@ main {
 /* Footer */
 footer {
     margin-top: auto;
-    background: linear-gradient(135deg, #2c3e50, #4b6cb7); /* Softer, lighter gradient (Blue-Grey) */
-    color: #f8f9fa; /* High contrast text */
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #2c3e50, #4b6cb7);
+    /* Softer, lighter gradient (Blue-Grey) */
+    color: #f8f9fa;
+    /* High contrast text */
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .footer-link {
@@ -171,7 +182,8 @@ footer {
 .footer-link:hover {
     color: var(--sm-accent) !important;
     padding-left: 8px;
-    text-shadow: 0 0 10px rgba(255, 179, 0, 0.5); /* Glow effect */
+    text-shadow: 0 0 10px rgba(255, 179, 0, 0.5);
+    /* Glow effect */
 }
 
 /* Product Cards */
@@ -197,11 +209,11 @@ footer {
     .hero-section {
         padding: 40px 0;
     }
-    
+
     .display-4 {
         font-size: 2rem;
     }
-    
+
     .card {
         margin-bottom: 20px;
     }
@@ -262,6 +274,7 @@ footer {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -280,15 +293,20 @@ footer {
     border-radius: 4px;
     overflow: hidden;
 }
+
 .rating-fill {
     height: 100%;
+    width: var(--pct, 0%);
     background-color: var(--sm-success);
+    border-radius: 4px;
+    transition: width 0.4s ease;
 }
 
 /* Star Rating Colors */
 .text-warning {
     color: #ffc107 !important;
 }
+
 .text-success {
     color: #26a541 !important;
 }
@@ -298,6 +316,7 @@ footer {
     font-size: 0.85rem;
     color: #878787;
 }
+
 .verified-badge {
     font-size: 0.75rem;
     color: #878787;
@@ -310,14 +329,17 @@ footer {
     color: white;
     font-weight: 500;
 }
+
 .btn-orange:hover {
     background-color: #f39000;
     color: white;
 }
+
 .btn-orange-outline {
     border-color: #ff9f00;
     color: #ff9f00;
 }
+
 .btn-orange-outline:hover {
     background-color: #ff9f00;
     color: white;
@@ -328,4 +350,3 @@ footer {
     object-fit: contain;
     padding: 1rem;
 }
-

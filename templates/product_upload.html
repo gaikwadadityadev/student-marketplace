@@ -14,38 +14,30 @@
                     <form method="POST" action="{{ url_for('product_upload') }}" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label for="name" class="form-label">Product Name *</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="name" 
-                                   name="name" 
-                                   required 
-                                   placeholder="e.g., Calculus Textbook">
+                            <input type="text" class="form-control" id="name" name="name" required
+                                placeholder="e.g., Calculus Textbook">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="description" class="form-label">Description *</label>
-                            <textarea class="form-control" 
-                                      id="description" 
-                                      name="description" 
-                                      rows="4" 
-                                      required 
-                                      placeholder="Describe your product..."></textarea>
+                            <textarea class="form-control" id="description" name="description" rows="4" required
+                                placeholder="Describe your product..."></textarea>
                         </div>
-                        
+
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="price" class="form-label">Price (₹) *</label>
-                                <input type="number" 
-                                       class="form-control" 
-                                       id="price" 
-                                       name="price" 
-                                       step="0.01" 
-                                       min="0.01" 
-                                       required 
-                                       placeholder="0.00">
+                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0.01"
+                                    required placeholder="0.00">
                             </div>
-                            
-                            <div class="col-md-6 mb-3">
+
+                            <div class="col-md-4 mb-3">
+                                <label for="stock" class="form-label">Stock *</label>
+                                <input type="number" class="form-control" id="stock" name="stock" min="0" required
+                                    placeholder="0">
+                            </div>
+
+                            <div class="col-md-4 mb-3">
                                 <label for="category" class="form-label">Category *</label>
                                 <select class="form-select" id="category" name="category" required>
                                     <option value="">Select Category</option>
@@ -58,21 +50,19 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="image" class="form-label">Product Image</label>
-                            <input type="file" 
-                                   class="form-control" 
-                                   id="image" 
-                                   name="image" 
-                                   accept="image/*">
-                            <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WEBP (Max 16MB)</small>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WEBP (Max
+                                16MB)</small>
                         </div>
-                        
+
                         <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Your product will be reviewed by admin before it becomes visible to other students.
+                            <i class="bi bi-info-circle"></i> Your product will be reviewed by admin before it becomes
+                            visible to other students.
                         </div>
-                        
+
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Upload Product</button>
@@ -84,4 +74,3 @@
     </div>
 </div>
 {% endblock %}
-

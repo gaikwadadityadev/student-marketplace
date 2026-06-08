@@ -17,12 +17,13 @@ def _mysql_uri() -> str:
     Uses PyMySQL driver for MySQL connectivity
     """
     user = os.getenv('MYSQL_USER', 'root')
-    password = os.getenv('MYSQL_PASSWORD', 'Aditya@08')
+    password = os.getenv('MYSQL_PASSWORD', 'root')
     host = os.getenv('MYSQL_HOST', '127.0.0.1')
     port = os.getenv('MYSQL_PORT', '3306')
     database = os.getenv('MYSQL_DB', 'student_marketplace')
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Aditya%4008@127.0.0.1:3306/student_marketplace?charset=utf8mb4'
-    return SQLALCHEMY_DATABASE_URI
+    # URL-encode special chars in password
+    from urllib.parse import quote_plus
+    return f'mysql+pymysql://{user}:{quote_plus(password)}@{host}:{port}/{database}?charset=utf8mb4'
 
 
 class Config:

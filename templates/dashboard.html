@@ -545,6 +545,7 @@
                                     <tr>
                                         <th>Product</th>
                                         <th>Price</th>
+                                        <th>Stock</th>
                                         <th>Category</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -557,6 +558,17 @@
                                             <strong>{{ product.name }}</strong>
                                         </td>
                                         <td>₹{{ "%.0f"|format(product.price) }}</td>
+                                        <td>
+                                            {% set stock_val = (product.stock | default(0)) or 0 %}
+                                            {% if stock_val > 5 %}
+                                            <span class="badge bg-success bg-opacity-75">In Stock: {{ stock_val
+                                                }}</span>
+                                            {% elif stock_val > 0 %}
+                                            <span class="badge bg-warning text-dark">Only {{ stock_val }} left!</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                            {% endif %}
+                                        </td>
                                         <td><span class="text-muted">{{ product.category }}</span></td>
                                         <td>
                                             {% if product.status == 'approved' %}
