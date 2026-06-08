@@ -47,6 +47,102 @@ os.makedirs(PRODUCTS_UPLOAD_DIR, exist_ok=True)
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], pool_pre_ping=True)
 
 
+# ==================== AUTO TABLE CREATION ====================
+def create_all_tables():
+    """Create all database tables if they don't exist. Runs on startup."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS users (
+                    user_id INT PRIMARY KEY AUTO_INCREMENT,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    email VARCHAR(100) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    full_name VARCHAR(100) NOT NULL,
+                    phone VARCHAR(20),
+                    college_id VARCHAR(20),
+                    role ENUM('student','admin') DEFAULT 'student',
+                    status ENUM('active','blocked') DEFAULT 'active',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_email (email),
+                    INDEX idx_username (username)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS products (
+                    product_id INT PRIMARY KEY AUTO_INCREMENT,
+                    seller_id INT NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    price DECIMAL(10,2) NOT NULL,
+                    category VARCHAR(50),
+                    stock INT DEFAULT 0,
+                    image_path VARCHAR(255),
+                    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (seller_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                    INDEX idx_status (status),
+                    INDEX idx_category (category)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS cart (
+                    cart_id INT PRIMARY KEY AUTO_INCREMENT,
+                    user_id INT NOT NULL,
+                    product_id INT NOT NULL,
+                    quantity INT DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+                    UNIQUE KEY unique_cart_item (user_id, product_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS orders (
+                    order_id INT PRIMARY KEY AUTO_INCREMENT,
+                    buyer_id INT NOT NULL,
+                    total_amount DECIMAL(10,2) NOT NULL,
+                    status ENUM('pending','completed','cancelled') DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS order_items (
+                    order_item_id INT PRIMARY KEY AUTO_INCREMENT,
+                    order_id INT NOT NULL,
+                    product_id INT NOT NULL,
+                    quantity INT NOT NULL,
+                    price DECIMAL(10,2) NOT NULL,
+                    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+                    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS product_reviews (
+                    review_id INT PRIMARY KEY AUTO_INCREMENT,
+                    product_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    rating INT NOT NULL,
+                    review_title VARCHAR(255),
+                    review_text TEXT,
+                    status ENUM('pending','approved','rejected') DEFAULT 'approved',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """))
+            conn.commit()
+            print('✅ Database tables created/verified successfully')
+    except Exception as e:
+        print(f'⚠️  Table creation warning: {e}')
+
+
+# Run table creation on startup
+create_all_tables()
+
+
 def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and \
@@ -1246,8 +1342,63 @@ def order_delete(order_id):
     return redirect(url_for('order_history'))
 
 
+# ==================== ADMIN SETUP ROUTE (One-time use) ====================
+@app.route('/setup-admin')
+def setup_admin():
+    """
+    One-time admin setup route.
+    Usage: /setup-admin?secret=YOUR_SECRET_KEY
+    The secret must match the app's SECRET_KEY env variable.
+    """
+    secret = request.args.get('secret', '')
+    if secret != app.config.get('SECRET_KEY', ''):
+        return jsonify({'error': 'Unauthorized. Provide correct ?secret= parameter.'}), 403
+
+    try:
+        # Generate fresh bcrypt hash in Python (no shell corruption)
+        username = request.args.get('username', 'Aditya')
+        password = request.args.get('password', 'Aditya@2103')
+        email    = request.args.get('email', 'admin@marketplace.com')
+
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        with engine.connect() as conn:
+            conn.execute(text("""
+                INSERT INTO users (username, email, password, full_name, role, status)
+                VALUES (:username, :email, :password, :full_name, 'admin', 'active')
+                ON DUPLICATE KEY UPDATE
+                    password = VALUES(password),
+                    role     = 'admin',
+                    status   = 'active'
+            """), {
+                'username':  username,
+                'email':     email,
+                'password':  hashed,
+                'full_name': username
+            })
+            conn.commit()
+
+            # Verify
+            row = conn.execute(
+                text("SELECT user_id, username, role, status FROM users WHERE username = :u"),
+                {'u': username}
+            ).mappings().first()
+
+        return jsonify({
+            'success': True,
+            'message': f'Admin user "{username}" created/updated successfully!',
+            'user': dict(row),
+            'login_url': '/admin/login',
+            'credentials': {'username': username, 'password': password}
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ==================== RUN APPLICATION ====================
 if __name__ == '__main__':
+
     # Create tables if they don't exist (for development)
     # In production, run schema.sql separately
     app.run(host='0.0.0.0', port=5000, debug=True)
