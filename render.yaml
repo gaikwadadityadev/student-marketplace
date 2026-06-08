@@ -6,18 +6,25 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --log-level info
     envVars:
       - key: FLASK_ENV
         value: production
       - key: FLASK_DEBUG
         value: "False"
+
+      # SECRET_KEY must be a FIXED value — NOT generateValue (which rotates on every deploy)
+      # Set this manually once in Render Dashboard → Environment → SECRET_KEY
       - key: SECRET_KEY
-        generateValue: true
+        value: "StudentMarketplace-SuperSecret-2024-FixedKey-DoNotChange"
+
       - key: WTF_CSRF_SECRET_KEY
-        generateValue: true
+        value: "StudentMarketplace-CSRF-2024-FixedKey"
+
       - key: SESSION_COOKIE_SECURE
         value: "True"
+
+      # ── Database (Railway MySQL) — fill in Render Dashboard ──
       - key: MYSQL_HOST
         sync: false
       - key: MYSQL_USER
@@ -28,6 +35,19 @@ services:
         sync: false
       - key: MYSQL_PORT
         value: "3306"
+
+      # ── Admin credentials seeded on first startup ──
+      - key: ADMIN_USERNAME
+        value: "Aditya"
+      - key: ADMIN_PASSWORD
+        value: "Aditya@2103"
+      - key: ADMIN_EMAIL
+        value: "admin@marketplace.com"
+
+      # ── Setup token for /setup-admin reset route ──
+      - key: SETUP_TOKEN
+        value: "setup2024"
+
       - key: CORS_ORIGINS
         value: "*"
       - key: MAX_CONTENT_LENGTH

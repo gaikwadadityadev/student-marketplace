@@ -1,9 +1,8 @@
 """
 Configuration file for Student Marketplace Flask Application
-Enhanced with comprehensive security settings
+Production-hardened with fixed SECRET_KEY and proper env var loading
 """
 import os
-import secrets
 from datetime import timedelta
 from dotenv import load_dotenv
 
@@ -13,111 +12,98 @@ load_dotenv()
 
 def _mysql_uri() -> str:
     """
-    Construct MySQL database URI from environment variables
-    Uses PyMySQL driver for MySQL connectivity
+    Construct MySQL database URI from environment variables.
+    Supports both MYSQL_* (Render convention) and MYSQLHOST etc. (Railway convention).
     """
-    user = os.getenv('MYSQL_USER', 'root')
-    password = os.getenv('MYSQL_PASSWORD', 'root')
-    host = os.getenv('MYSQL_HOST', '127.0.0.1')
-    port = os.getenv('MYSQL_PORT', '3306')
-    database = os.getenv('MYSQL_DB', 'student_marketplace')
-    # URL-encode special chars in password
     from urllib.parse import quote_plus
-    return f'mysql+pymysql://{user}:{quote_plus(password)}@{host}:{port}/{database}?charset=utf8mb4'
+
+    # Try Render-style first, then Railway-style
+    user     = os.getenv('MYSQL_USER')     or os.getenv('MYSQLUSER', 'root')
+    password = os.getenv('MYSQL_PASSWORD') or os.getenv('MYSQLPASSWORD', '')
+    host     = os.getenv('MYSQL_HOST')     or os.getenv('MYSQLHOST', '127.0.0.1')
+    port     = os.getenv('MYSQL_PORT')     or os.getenv('MYSQLPORT', '3306')
+    database = os.getenv('MYSQL_DB')       or os.getenv('MYSQLDATABASE', 'student_marketplace')
+
+    return (
+        f'mysql+pymysql://{user}:{quote_plus(str(password))}'
+        f'@{host}:{port}/{database}?charset=utf8mb4'
+    )
 
 
 class Config:
-    """Application configuration class with enhanced security"""
-    
-    # ==================== DATABASE CONFIGURATION ====================
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', _mysql_uri())
+    """Application configuration class — production-hardened"""
+
+    # ==================== DATABASE ====================
+    # If DATABASE_URL is set directly, use it. Otherwise build from parts.
+    SQLALCHEMY_DATABASE_URI      = os.getenv('DATABASE_URL', _mysql_uri())
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
+    SQLALCHEMY_ENGINE_OPTIONS    = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
+        'pool_timeout': 30,
+        'pool_size': 5,
+        'max_overflow': 10,
     }
-    
+
     # ==================== SECRET KEYS ====================
-    # Generate secure secret key: python -c "import secrets; print(secrets.token_hex(32))"
-    SECRET_KEY = os.getenv('SECRET_KEY', secrets.token_hex(32))
-    WTF_CSRF_SECRET_KEY = os.getenv('WTF_CSRF_SECRET_KEY', secrets.token_hex(32))
-    
-    # ==================== CSRF PROTECTION ====================
-    WTF_CSRF_ENABLED = True
-    WTF_CSRF_TIME_LIMIT = None  # No expiration for CSRF tokens
-    WTF_CSRF_SSL_STRICT = os.getenv('FLASK_ENV') == 'production'
-    WTF_CSRF_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE']
-    
-    # ==================== SESSION SECURITY ====================
-    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
-    SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
-    SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
-    SESSION_COOKIE_NAME = 'student_marketplace_session'
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
+    # CRITICAL: Must be a FIXED value in production.
+    # secrets.token_hex(32) rotates on every restart → sessions break.
+    SECRET_KEY = os.getenv(
+        'SECRET_KEY',
+        'StudentMarketplace-SuperSecret-2024-FixedKey-DoNotChange'
+    )
+    WTF_CSRF_SECRET_KEY = os.getenv(
+        'WTF_CSRF_SECRET_KEY',
+        'StudentMarketplace-CSRF-2024-FixedKey'
+    )
+
+    # ==================== CSRF ====================
+    WTF_CSRF_ENABLED    = True
+    WTF_CSRF_TIME_LIMIT = None
+    WTF_CSRF_SSL_STRICT = False   # Keep False — form tokens handled separately
+    WTF_CSRF_METHODS    = ['POST', 'PUT', 'PATCH', 'DELETE']
+
+    # ==================== SESSION ====================
+    SESSION_COOKIE_SECURE   = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_NAME     = 'student_marketplace_session'
+    PERMANENT_SESSION_LIFETIME   = timedelta(hours=24)
     SESSION_REFRESH_EACH_REQUEST = True
-    
+
+    # ==================== FILE UPLOADS ====================
+    UPLOAD_FOLDER       = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), 'static', 'uploads'
+    )
+    MAX_CONTENT_LENGTH  = int(os.getenv('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
+    ALLOWED_EXTENSIONS  = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
     # ==================== RATE LIMITING ====================
-    RATELIMIT_ENABLED = os.getenv('RATELIMIT_ENABLED', 'True') == 'True'
+    RATELIMIT_ENABLED     = os.getenv('RATELIMIT_ENABLED', 'True') == 'True'
     RATELIMIT_STORAGE_URL = os.getenv('RATELIMIT_STORAGE_URL', 'memory://')
-    RATELIMIT_STRATEGY = 'fixed-window'
-    RATELIMIT_DEFAULT = '200 per hour'
+    RATELIMIT_STRATEGY    = 'fixed-window'
+    RATELIMIT_DEFAULT     = '200 per hour'
     RATELIMIT_HEADERS_ENABLED = True
-    
-    # ==================== FILE UPLOAD CONFIGURATION ====================
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'uploads')
-    MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))  # 16MB
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-    
-    # ==================== SECURITY HEADERS ====================
-    # Enable security headers
-    TALISMAN_ENABLED = os.getenv('FLASK_ENV') != 'development'
-    TALISMAN_FORCE_HTTPS = os.getenv('FLASK_ENV') == 'production'
-    
-    # Content Security Policy
-    CONTENT_SECURITY_POLICY = {
-        'default-src': ["'self'"],
-        'script-src': [
-            "'self'",
-            "'unsafe-inline'",  # Required for inline scripts
-            'https://cdn.jsdelivr.net',
-            'https://code.jquery.com',
-            'https://stackpath.bootstrapcdn.com',
-        ],
-        'style-src': [
-            "'self'",
-            "'unsafe-inline'",  # Required for inline styles
-            'https://fonts.googleapis.com',
-            'https://cdn.jsdelivr.net',
-            'https://stackpath.bootstrapcdn.com',
-        ],
-        'font-src': [
-            "'self'",
-            'https://fonts.gstatic.com',
-            'https://cdn.jsdelivr.net',
-        ],
-        'img-src': [
-            "'self'",
-            'data:',
-            'https:',
-        ],
-        'connect-src': ["'self'"],
-    }
-    
-    # ==================== CORS CONFIGURATION ====================
+
+    # ==================== CORS ====================
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', '*')
-    
-    # ==================== PASSWORD POLICY ====================
-    MIN_PASSWORD_LENGTH = 8
-    REQUIRE_PASSWORD_COMPLEXITY = True
-    
-    # ==================== LOGIN SECURITY ====================
-    MAX_LOGIN_ATTEMPTS = 5
-    LOGIN_ATTEMPT_TIMEOUT = 900  # 15 minutes in seconds
-    
-    # ==================== INPUT SANITIZATION ====================
-    BLEACH_ALLOWED_TAGS = ['b', 'i', 'u', 'em', 'strong', 'p', 'br']
-    BLEACH_ALLOWED_ATTRIBUTES = {}
-    
+
+    # ==================== SECURITY HEADERS ====================
+    TALISMAN_ENABLED    = False   # Disabled — Render handles HTTPS termination
+    TALISMAN_FORCE_HTTPS = False
+
     # ==================== ENVIRONMENT ====================
     FLASK_ENV = os.getenv('FLASK_ENV', 'development')
-    DEBUG = os.getenv('FLASK_DEBUG', 'True') == 'True'
+    DEBUG     = os.getenv('FLASK_DEBUG', 'False') == 'True'
+
+    # ==================== INPUT SANITIZATION ====================
+    BLEACH_ALLOWED_TAGS       = ['b', 'i', 'u', 'em', 'strong', 'p', 'br']
+    BLEACH_ALLOWED_ATTRIBUTES = {}
+
+    # ==================== PASSWORD POLICY ====================
+    MIN_PASSWORD_LENGTH       = 6
+    REQUIRE_PASSWORD_COMPLEXITY = True
+
+    # ==================== LOGIN SECURITY ====================
+    MAX_LOGIN_ATTEMPTS    = 10
+    LOGIN_ATTEMPT_TIMEOUT = 900

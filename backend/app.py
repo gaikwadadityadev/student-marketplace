@@ -47,7 +47,7 @@ os.makedirs(PRODUCTS_UPLOAD_DIR, exist_ok=True)
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], pool_pre_ping=True)
 
 
-# ==================== AUTO TABLE CREATION ====================
+# ==================== AUTO TABLE CREATION + ADMIN SEED ====================
 def create_all_tables():
     """Create all database tables if they don't exist. Runs on startup."""
     try:
@@ -135,12 +135,51 @@ def create_all_tables():
             """))
             conn.commit()
             print('✅ Database tables created/verified successfully')
+
+            # ── Auto-seed admin user ────────────────────────────────
+            # Read credentials from env vars (with sensible defaults)
+            admin_user = os.getenv('ADMIN_USERNAME', 'Aditya')
+            admin_pass = os.getenv('ADMIN_PASSWORD', 'Aditya@2103')
+            admin_email = os.getenv('ADMIN_EMAIL', 'admin@marketplace.com')
+
+            existing_admin = conn.execute(
+                text("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")
+            ).mappings().first()
+
+            if not existing_admin:
+                # No admin exists — create one now with fresh bcrypt hash
+                hashed = bcrypt.hashpw(
+                    admin_pass.encode('utf-8'), bcrypt.gensalt()
+                ).decode('utf-8')
+                conn.execute(text("""
+                    INSERT INTO users
+                        (username, email, password, full_name, role, status)
+                    VALUES
+                        (:username, :email, :password, :full_name, 'admin', 'active')
+                    ON DUPLICATE KEY UPDATE
+                        password = VALUES(password),
+                        role     = 'admin',
+                        status   = 'active'
+                """), {
+                    'username':  admin_user,
+                    'email':     admin_email,
+                    'password':  hashed,
+                    'full_name': admin_user,
+                })
+                conn.commit()
+                print(f'✅ Admin user "{admin_user}" created automatically')
+            else:
+                print(f'✅ Admin user already exists — skipping seed')
+
     except Exception as e:
-        print(f'⚠️  Table creation warning: {e}')
+        print(f'⚠️  Startup DB warning: {e}')
+        import traceback as _tb
+        _tb.print_exc()
 
 
-# Run table creation on startup
+# Run table creation + admin seed on every startup
 create_all_tables()
+
 
 
 def allowed_file(filename):
@@ -1342,24 +1381,32 @@ def order_delete(order_id):
     return redirect(url_for('order_history'))
 
 
-# ==================== ADMIN SETUP ROUTE (One-time use) ====================
+# ==================== ADMIN SETUP / RESET ROUTE ====================
 @app.route('/setup-admin')
 def setup_admin():
     """
-    One-time admin setup route.
-    Usage: /setup-admin?secret=YOUR_SECRET_KEY
-    The secret must match the app's SECRET_KEY env variable.
+    Admin creation / password-reset route.
+    Secured by SETUP_TOKEN env var (default: 'setup2024').
+
+    Usage:
+      /setup-admin?token=setup2024
+      /setup-admin?token=setup2024&username=Aditya&password=Aditya@2103
     """
-    secret = request.args.get('secret', '')
-    if secret != app.config.get('SECRET_KEY', ''):
-        return jsonify({'error': 'Unauthorized. Provide correct ?secret= parameter.'}), 403
+    setup_token = os.getenv('SETUP_TOKEN', 'setup2024')
+    provided    = request.args.get('token', '')
+
+    if provided != setup_token:
+        return jsonify({
+            'error': 'Unauthorized',
+            'hint': 'Provide ?token=<SETUP_TOKEN> query parameter'
+        }), 403
 
     try:
-        # Generate fresh bcrypt hash in Python (no shell corruption)
-        username = request.args.get('username', 'Aditya')
-        password = request.args.get('password', 'Aditya@2103')
-        email    = request.args.get('email', 'admin@marketplace.com')
+        username = request.args.get('username', os.getenv('ADMIN_USERNAME', 'Aditya'))
+        password = request.args.get('password', os.getenv('ADMIN_PASSWORD', 'Aditya@2103'))
+        email    = request.args.get('email',    os.getenv('ADMIN_EMAIL', 'admin@marketplace.com'))
 
+        # Always generate a fresh hash in Python — never copy-paste from shell
         hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
         with engine.connect() as conn:
@@ -1374,11 +1421,10 @@ def setup_admin():
                 'username':  username,
                 'email':     email,
                 'password':  hashed,
-                'full_name': username
+                'full_name': username,
             })
             conn.commit()
 
-            # Verify
             row = conn.execute(
                 text("SELECT user_id, username, role, status FROM users WHERE username = :u"),
                 {'u': username}
@@ -1386,10 +1432,14 @@ def setup_admin():
 
         return jsonify({
             'success': True,
-            'message': f'Admin user "{username}" created/updated successfully!',
+            'message': f'Admin "{username}" created / password reset successfully!',
             'user': dict(row),
             'login_url': '/admin/login',
-            'credentials': {'username': username, 'password': password}
+            'credentials': {
+                'username': username,
+                'password': password,
+                'note':     'Save this — password is not stored in plain text'
+            }
         })
 
     except Exception as e:
@@ -1398,7 +1448,5 @@ def setup_admin():
 
 # ==================== RUN APPLICATION ====================
 if __name__ == '__main__':
-
-    # Create tables if they don't exist (for development)
-    # In production, run schema.sql separately
     app.run(host='0.0.0.0', port=5000, debug=True)
+
