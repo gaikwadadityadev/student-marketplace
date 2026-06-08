@@ -37,11 +37,18 @@ class Config:
     # Otherwise check if MYSQL_HOST or MYSQLHOST is set and build MySQL URI.
     # Finally, fall back to SQLite.
     _db_url = os.getenv('DATABASE_URL')
-    if _db_url:
+    _mysql_host = os.getenv('MYSQL_HOST') or os.getenv('MYSQLHOST')
+    
+    if _db_url and not any(p in _db_url.lower() for p in ['your_', 'placeholder']):
         if _db_url.startswith('postgres://'):
             _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+        if _db_url.startswith('postgresql://') and 'sslmode=' not in _db_url:
+            if '?' in _db_url:
+                _db_url += '&sslmode=require'
+            else:
+                _db_url += '?sslmode=require'
         SQLALCHEMY_DATABASE_URI = _db_url
-    elif os.getenv('MYSQL_HOST') or os.getenv('MYSQLHOST'):
+    elif _mysql_host and not any(p in _mysql_host.lower() for p in ['your_', 'placeholder']):
         SQLALCHEMY_DATABASE_URI = _mysql_uri()
     else:
         _db_path = os.path.normpath(os.path.join(os.path.dirname(__file__), 'student_marketplace.db'))

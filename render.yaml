@@ -24,6 +24,11 @@ services:
       - key: SESSION_COOKIE_SECURE
         value: "True"
 
+      - key: DATABASE_URL
+        fromDatabase:
+          name: student-marketplace-db
+          property: connectionString
+
       # ── Database (Railway MySQL) — fill in Render Dashboard ──
       - key: MYSQL_HOST
         sync: false
@@ -52,3 +57,9 @@ services:
         value: "*"
       - key: MAX_CONTENT_LENGTH
         value: "16777216"
+
+databases:
+  - name: student-marketplace-db
+    databaseName: student_marketplace
+    user: student_marketplace_user
+    plan: free
