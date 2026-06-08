@@ -473,6 +473,43 @@ def index():
         return render_template('index.html', products=[])
 
 
+@app.route('/db-test')
+def db_test():
+    import urllib.parse
+    info = {
+        'database_uri_configured': app.config.get('SQLALCHEMY_DATABASE_URI'),
+        'dialect': engine.dialect.name,
+        'error': None,
+        'traceback': None,
+        'test_query_result': None,
+        'tables': []
+    }
+    if info['database_uri_configured']:
+        try:
+            # Simple obfuscation of credentials
+            parsed = urllib.parse.urlsplit(info['database_uri_configured'])
+            if parsed.password:
+                obfuscated_netloc = parsed.netloc.replace(parsed.password, '********')
+                info['database_uri_configured'] = parsed._replace(netloc=obfuscated_netloc).geturl()
+        except Exception:
+            pass
+    try:
+        with engine.connect() as conn:
+            res = conn.execute(text("SELECT 1")).scalar()
+            info['test_query_result'] = res
+            if engine.dialect.name == 'postgresql':
+                tables_res = conn.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")).all()
+            elif engine.dialect.name == 'mysql':
+                tables_res = conn.execute(text("SHOW TABLES")).all()
+            else:
+                tables_res = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).all()
+            info['tables'] = [row[0] for row in tables_res]
+    except Exception as e:
+        info['error'] = str(e)
+        info['traceback'] = traceback.format_exc()
+    return jsonify(info)
+
+
 # ==================== STUDENT REGISTRATION ====================
 @app.route('/register', methods=['GET', 'POST'])
 def register():
