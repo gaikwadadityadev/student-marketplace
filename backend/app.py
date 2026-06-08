@@ -43,8 +43,13 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 PRODUCTS_UPLOAD_DIR = os.path.join(app.config['UPLOAD_FOLDER'], 'products')
 os.makedirs(PRODUCTS_UPLOAD_DIR, exist_ok=True)
 
-# Database engine
-engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], pool_pre_ping=True)
+# Database engine — add SSL connect_args for PostgreSQL
+_db_uri = app.config['SQLALCHEMY_DATABASE_URI']
+_engine_kwargs = {'pool_pre_ping': True}
+if _db_uri.startswith('postgresql'):
+    _engine_kwargs['connect_args'] = {'sslmode': 'require'}
+engine = create_engine(_db_uri, **_engine_kwargs)
+print(f'[OK] Engine created: dialect={engine.dialect.name}, db={_db_uri[:40]}...')
 
 
 # ==================== AUTO TABLE CREATION + ADMIN SEED ====================
@@ -508,6 +513,21 @@ def db_test():
         info['error'] = str(e)
         info['traceback'] = traceback.format_exc()
     return jsonify(info)
+
+
+@app.route('/version')
+def version():
+    import subprocess
+    try:
+        commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=os.path.dirname(__file__)).decode().strip()
+    except Exception:
+        commit = 'unavailable'
+    return jsonify({
+        'commit': commit,
+        'db_dialect': engine.dialect.name,
+        'db_uri_prefix': app.config['SQLALCHEMY_DATABASE_URI'][:50],
+        'deploy_timestamp': '2026-06-08T17:45-commit-5'
+    })
 
 
 # ==================== STUDENT REGISTRATION ====================
