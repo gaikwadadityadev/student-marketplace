@@ -51,115 +51,285 @@ engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], pool_pre_ping=True
 def create_all_tables():
     """Create all database tables if they don't exist. Runs on startup."""
     try:
+        dialect = engine.dialect.name
         with engine.connect() as conn:
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS users (
-                    user_id INT PRIMARY KEY AUTO_INCREMENT,
-                    username VARCHAR(50) UNIQUE NOT NULL,
-                    email VARCHAR(100) UNIQUE NOT NULL,
-                    password VARCHAR(255) NOT NULL,
-                    full_name VARCHAR(100) NOT NULL,
-                    phone VARCHAR(20),
-                    college_id VARCHAR(20),
-                    role ENUM('student','admin') DEFAULT 'student',
-                    status ENUM('active','blocked') DEFAULT 'active',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    INDEX idx_email (email),
-                    INDEX idx_username (username)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS products (
-                    product_id INT PRIMARY KEY AUTO_INCREMENT,
-                    seller_id INT NOT NULL,
-                    name VARCHAR(255) NOT NULL,
-                    description TEXT,
-                    price DECIMAL(10,2) NOT NULL,
-                    category VARCHAR(50),
-                    stock INT DEFAULT 0,
-                    image_path VARCHAR(255),
-                    status ENUM('pending','approved','rejected') DEFAULT 'pending',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    FOREIGN KEY (seller_id) REFERENCES users(user_id) ON DELETE CASCADE,
-                    INDEX idx_status (status),
-                    INDEX idx_category (category)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS cart (
-                    cart_id INT PRIMARY KEY AUTO_INCREMENT,
-                    user_id INT NOT NULL,
-                    product_id INT NOT NULL,
-                    quantity INT DEFAULT 1,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-                    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
-                    UNIQUE KEY unique_cart_item (user_id, product_id)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS orders (
-                    order_id INT PRIMARY KEY AUTO_INCREMENT,
-                    buyer_id INT NOT NULL,
-                    total_amount DECIMAL(10,2) NOT NULL,
-                    status ENUM('pending','completed','cancelled') DEFAULT 'pending',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS order_items (
-                    order_item_id INT PRIMARY KEY AUTO_INCREMENT,
-                    order_id INT NOT NULL,
-                    product_id INT NOT NULL,
-                    quantity INT NOT NULL,
-                    price DECIMAL(10,2) NOT NULL,
-                    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
-                    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS product_reviews (
-                    review_id INT PRIMARY KEY AUTO_INCREMENT,
-                    product_id INT NOT NULL,
-                    user_id INT NOT NULL,
-                    rating INT NOT NULL,
-                    review_title VARCHAR(255),
-                    review_text TEXT,
-                    status ENUM('pending','approved','rejected') DEFAULT 'approved',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
-                    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """))
-            conn.commit()
-            print('✅ Database tables created/verified successfully')
+            if dialect == 'mysql':
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        user_id INT PRIMARY KEY AUTO_INCREMENT,
+                        username VARCHAR(50) UNIQUE NOT NULL,
+                        email VARCHAR(100) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        full_name VARCHAR(100) NOT NULL,
+                        phone VARCHAR(20),
+                        college_id VARCHAR(20),
+                        role ENUM('student','admin') DEFAULT 'student',
+                        status ENUM('active','blocked') DEFAULT 'active',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        INDEX idx_email (email),
+                        INDEX idx_username (username)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS products (
+                        product_id INT PRIMARY KEY AUTO_INCREMENT,
+                        seller_id INT NOT NULL,
+                        name VARCHAR(255) NOT NULL,
+                        description TEXT,
+                        price DECIMAL(10,2) NOT NULL,
+                        category VARCHAR(50),
+                        stock INT DEFAULT 0,
+                        image_path VARCHAR(255),
+                        status ENUM('pending','approved','rejected') DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        FOREIGN KEY (seller_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                        INDEX idx_status (status),
+                        INDEX idx_category (category)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS cart (
+                        cart_id INT PRIMARY KEY AUTO_INCREMENT,
+                        user_id INT NOT NULL,
+                        product_id INT NOT NULL,
+                        quantity INT DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+                        UNIQUE KEY unique_cart_item (user_id, product_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS orders (
+                        order_id INT PRIMARY KEY AUTO_INCREMENT,
+                        buyer_id INT NOT NULL,
+                        total_amount DECIMAL(10,2) NOT NULL,
+                        status ENUM('pending','completed','cancelled') DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        address TEXT,
+                        city VARCHAR(100),
+                        zip_code VARCHAR(20),
+                        FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS order_items (
+                        order_item_id INT PRIMARY KEY AUTO_INCREMENT,
+                        order_id INT NOT NULL,
+                        product_id INT NOT NULL,
+                        quantity INT NOT NULL,
+                        price DECIMAL(10,2) NOT NULL,
+                        FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS product_reviews (
+                        review_id INT PRIMARY KEY AUTO_INCREMENT,
+                        product_id INT NOT NULL,
+                        user_id INT NOT NULL,
+                        rating INT NOT NULL,
+                        review_title VARCHAR(255),
+                        review_text TEXT,
+                        status ENUM('pending','approved','rejected') DEFAULT 'approved',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+                        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """))
+            elif dialect == 'postgresql':
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        user_id SERIAL PRIMARY KEY,
+                        username VARCHAR(50) UNIQUE NOT NULL,
+                        email VARCHAR(100) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        full_name VARCHAR(100) NOT NULL,
+                        phone VARCHAR(20),
+                        college_id VARCHAR(20),
+                        role VARCHAR(20) DEFAULT 'student',
+                        status VARCHAR(20) DEFAULT 'active',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS products (
+                        product_id SERIAL PRIMARY KEY,
+                        seller_id INT NOT NULL,
+                        name VARCHAR(255) NOT NULL,
+                        description TEXT,
+                        price DECIMAL(10,2) NOT NULL,
+                        category VARCHAR(50),
+                        stock INT DEFAULT 0,
+                        image_path VARCHAR(255),
+                        status VARCHAR(20) DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (seller_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS cart (
+                        cart_id SERIAL PRIMARY KEY,
+                        user_id INT NOT NULL,
+                        product_id INT NOT NULL,
+                        quantity INT DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+                        UNIQUE (user_id, product_id)
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS orders (
+                        order_id SERIAL PRIMARY KEY,
+                        buyer_id INT NOT NULL,
+                        total_amount DECIMAL(10,2) NOT NULL,
+                        status VARCHAR(20) DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        address TEXT,
+                        city VARCHAR(100),
+                        zip_code VARCHAR(20),
+                        FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS order_items (
+                        order_item_id SERIAL PRIMARY KEY,
+                        order_id INT NOT NULL,
+                        product_id INT NOT NULL,
+                        quantity INT NOT NULL,
+                        price DECIMAL(10,2) NOT NULL,
+                        FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS product_reviews (
+                        review_id SERIAL PRIMARY KEY,
+                        product_id INT NOT NULL,
+                        user_id INT NOT NULL,
+                        rating INT NOT NULL,
+                        review_title VARCHAR(255),
+                        review_text TEXT,
+                        status VARCHAR(20) DEFAULT 'approved',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+                        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    )
+                """))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_username ON users (username)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_products_status ON products (status)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_products_category ON products (category)"))
+            else: # sqlite
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username VARCHAR(50) UNIQUE NOT NULL,
+                        email VARCHAR(100) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        full_name VARCHAR(100) NOT NULL,
+                        phone VARCHAR(20),
+                        college_id VARCHAR(20),
+                        role VARCHAR(20) DEFAULT 'student',
+                        status VARCHAR(20) DEFAULT 'active',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS products (
+                        product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        seller_id INT NOT NULL,
+                        name VARCHAR(255) NOT NULL,
+                        description TEXT,
+                        price DECIMAL(10,2) NOT NULL,
+                        category VARCHAR(50),
+                        stock INT DEFAULT 0,
+                        image_path VARCHAR(255),
+                        status VARCHAR(20) DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (seller_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS cart (
+                        cart_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INT NOT NULL,
+                        product_id INT NOT NULL,
+                        quantity INT DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+                        UNIQUE (user_id, product_id)
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS orders (
+                        order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        buyer_id INT NOT NULL,
+                        total_amount DECIMAL(10,2) NOT NULL,
+                        status VARCHAR(20) DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        address TEXT,
+                        city VARCHAR(100),
+                        zip_code VARCHAR(20),
+                        FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS order_items (
+                        order_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        order_id INT NOT NULL,
+                        product_id INT NOT NULL,
+                        quantity INT NOT NULL,
+                        price DECIMAL(10,2) NOT NULL,
+                        FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+                    )
+                """))
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS product_reviews (
+                        review_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        product_id INT NOT NULL,
+                        user_id INT NOT NULL,
+                        rating INT NOT NULL,
+                        review_title VARCHAR(255),
+                        review_text TEXT,
+                        status VARCHAR(20) DEFAULT 'approved',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+                        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    )
+                """))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_username ON users (username)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_products_status ON products (status)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS idx_products_category ON products (category)"))
 
-            # ── Auto-seed admin user ────────────────────────────────
-            # Read credentials from env vars (with sensible defaults)
+            conn.commit()
+            print('[OK] Database tables created/verified successfully')
+
+            # ── Auto-seed/sync admin user ───────────────────────────
             admin_user = os.getenv('ADMIN_USERNAME', 'Aditya')
             admin_pass = os.getenv('ADMIN_PASSWORD', 'Aditya@2103')
             admin_email = os.getenv('ADMIN_EMAIL', 'admin@marketplace.com')
 
             existing_admin = conn.execute(
-                text("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")
+                text("SELECT user_id FROM users WHERE username = :username"),
+                {'username': admin_user}
             ).mappings().first()
 
+            hashed = bcrypt.hashpw(
+                admin_pass.encode('utf-8'), bcrypt.gensalt()
+            ).decode('utf-8')
+
             if not existing_admin:
-                # No admin exists — create one now with fresh bcrypt hash
-                hashed = bcrypt.hashpw(
-                    admin_pass.encode('utf-8'), bcrypt.gensalt()
-                ).decode('utf-8')
                 conn.execute(text("""
-                    INSERT INTO users
-                        (username, email, password, full_name, role, status)
-                    VALUES
-                        (:username, :email, :password, :full_name, 'admin', 'active')
-                    ON DUPLICATE KEY UPDATE
-                        password = VALUES(password),
-                        role     = 'admin',
-                        status   = 'active'
+                    INSERT INTO users (username, email, password, full_name, role, status)
+                    VALUES (:username, :email, :password, :full_name, 'admin', 'active')
                 """), {
                     'username':  admin_user,
                     'email':     admin_email,
@@ -167,12 +337,22 @@ def create_all_tables():
                     'full_name': admin_user,
                 })
                 conn.commit()
-                print(f'✅ Admin user "{admin_user}" created automatically')
+                print(f'[OK] Admin user "{admin_user}" created automatically')
             else:
-                print(f'✅ Admin user already exists — skipping seed')
+                conn.execute(text("""
+                    UPDATE users
+                    SET email = :email, password = :password, role = 'admin', status = 'active'
+                    WHERE username = :username
+                """), {
+                    'username':  admin_user,
+                    'email':     admin_email,
+                    'password':  hashed,
+                })
+                conn.commit()
+                print(f'[OK] Admin user "{admin_user}" credentials synced/updated')
 
     except Exception as e:
-        print(f'⚠️  Startup DB warning: {e}')
+        print(f'[WARN] Startup DB warning: {e}')
         import traceback as _tb
         _tb.print_exc()
 
@@ -375,6 +555,7 @@ def login():
                         return render_template('login.html')
                     
                     # Set session
+                    session.permanent = True
                     session['user_id'] = user['user_id']
                     session['username'] = user['username']
                     session['role'] = user['role']
@@ -416,6 +597,7 @@ def admin_login():
                 
                 if user_result and check_password(password, user_result['password']):
                     user = dict(user_result)
+                    session.permanent = True
                     session['user_id'] = user['user_id']
                     session['username'] = user['username']
                     session['role'] = user['role']
@@ -722,15 +904,33 @@ def product_view(product_id):
                 SELECT 
                     pr.*,
                     u.username,
-                    u.full_name,
-                    DATE_FORMAT(pr.created_at, '%d %M %Y') as review_date
+                    u.full_name
                 FROM product_reviews pr
                 LEFT JOIN users u ON pr.user_id = u.user_id
                 WHERE pr.product_id = :product_id AND pr.status = 'approved'
                 ORDER BY pr.created_at DESC
                 LIMIT 10
             """)
-            reviews = conn.execute(reviews_query, {'product_id': product_id}).mappings().all()
+            reviews_raw = conn.execute(reviews_query, {'product_id': product_id}).mappings().all()
+            
+            reviews = []
+            for r in reviews_raw:
+                rev = dict(r)
+                dt = rev.get('created_at')
+                if dt:
+                    if isinstance(dt, str):
+                        try:
+                            # Standard SQLite datetime string parsing
+                            dt = datetime.strptime(dt.split('.')[0], '%Y-%m-%d %H:%M:%S')
+                        except Exception:
+                            pass
+                    if isinstance(dt, datetime):
+                        rev['review_date'] = dt.strftime('%d %B %Y')
+                    else:
+                        rev['review_date'] = str(dt)
+                else:
+                    rev['review_date'] = ''
+                reviews.append(rev)
             
             # Get rating distribution
             dist_query = text("""
@@ -952,23 +1152,48 @@ def checkout():
                 # Calculate total (using dict access because mappings() returns dict-like objects)
                 total = sum(float(item['quantity'] * item['price']) for item in cart_items)
                 
-                # Create order
-                order_query = text("""
-                    INSERT INTO orders (buyer_id, total_amount, status)
-                    VALUES (:buyer_id, :total_amount, 'pending')
-                """)
-                result = conn.execute(order_query, {
-                    'buyer_id': session['user_id'],
-                    'total_amount': total
-                })
+                # Extract address details from form submission
+                address = request.form.get('address', '').strip()
+                city = request.form.get('city', '').strip()
+                zip_code = request.form.get('zip_code', '').strip()
                 
-                # Reliable way to get last inserted ID
-                if hasattr(result, 'lastrowid') and result.lastrowid:
-                    order_id = result.lastrowid
-                elif hasattr(result, 'inserted_primary_key') and result.inserted_primary_key:
-                    order_id = result.inserted_primary_key[0]
+                # Check for database dialect to execute correct query and fetch order_id
+                dialect = engine.dialect.name
+                if dialect == 'postgresql':
+                    # Use RETURNING order_id for PostgreSQL
+                    order_query = text("""
+                        INSERT INTO orders (buyer_id, total_amount, status, address, city, zip_code)
+                        VALUES (:buyer_id, :total_amount, 'pending', :address, :city, :zip_code)
+                        RETURNING order_id
+                    """)
+                    result = conn.execute(order_query, {
+                        'buyer_id': session['user_id'],
+                        'total_amount': total,
+                        'address': address,
+                        'city': city,
+                        'zip_code': zip_code
+                    })
+                    order_id = result.scalar()
                 else:
-                    order_id = conn.execute(text("SELECT LAST_INSERT_ID()")).scalar()
+                    # MySQL / SQLite insert
+                    order_query = text("""
+                        INSERT INTO orders (buyer_id, total_amount, status, address, city, zip_code)
+                        VALUES (:buyer_id, :total_amount, 'pending', :address, :city, :zip_code)
+                    """)
+                    result = conn.execute(order_query, {
+                        'buyer_id': session['user_id'],
+                        'total_amount': total,
+                        'address': address,
+                        'city': city,
+                        'zip_code': zip_code
+                    })
+                    # Reliable way to get last inserted ID on MySQL/SQLite
+                    if hasattr(result, 'lastrowid') and result.lastrowid:
+                        order_id = result.lastrowid
+                    elif hasattr(result, 'inserted_primary_key') and result.inserted_primary_key:
+                        order_id = result.inserted_primary_key[0]
+                    else:
+                        order_id = conn.execute(text("SELECT LAST_INSERT_ID()")).scalar()
                 
                 
                 # Create order items — check stock and deduct atomically
@@ -1053,9 +1278,17 @@ def order_history():
         user_id = session.get('user_id')
         
         with engine.connect() as conn:
-            query = text("""
+            dialect = engine.dialect.name
+            if dialect == 'postgresql':
+                group_concat_expr = "STRING_AGG(p.name, ', ')"
+            elif dialect == 'sqlite':
+                group_concat_expr = "GROUP_CONCAT(p.name, ', ')"
+            else:  # mysql
+                group_concat_expr = "GROUP_CONCAT(p.name SEPARATOR ', ')"
+
+            query = text(f"""
                 SELECT o.order_id, o.buyer_id, o.total_amount, o.status, o.created_at,
-                       GROUP_CONCAT(p.name SEPARATOR ', ') as product_names,
+                       {group_concat_expr} as product_names,
                        COUNT(oi.order_item_id) as item_count
                 FROM orders o
                 LEFT JOIN order_items oi ON o.order_id = oi.order_id
@@ -1110,20 +1343,28 @@ def admin_dashboard():
             stats_result = conn.execute(stats_query).mappings().first()
             stats = dict(stats_result) if stats_result else {}
             
+            dialect = engine.dialect.name
+            if dialect == 'postgresql':
+                group_concat_expr = "STRING_AGG(p.name, ', ')"
+            elif dialect == 'sqlite':
+                group_concat_expr = "GROUP_CONCAT(p.name, ', ')"
+            else:  # mysql
+                group_concat_expr = "GROUP_CONCAT(p.name SEPARATOR ', ')"
+
             # Get all orders with user information
-            orders_query = text("""
+            orders_query = text(f"""
                 SELECT o.*, 
                        u.username, 
                        u.full_name, 
                        u.email,
                        u.phone,
                        COUNT(oi.order_item_id) as item_count,
-                       GROUP_CONCAT(p.name SEPARATOR ', ') as product_names
+                       {group_concat_expr} as product_names
                 FROM orders o
                 JOIN users u ON o.buyer_id = u.user_id
                 LEFT JOIN order_items oi ON o.order_id = oi.order_id
                 LEFT JOIN products p ON oi.product_id = p.product_id
-                GROUP BY o.order_id
+                GROUP BY o.order_id, u.user_id, u.username, u.full_name, u.email, u.phone
                 ORDER BY o.created_at DESC
                 LIMIT 50
             """)
@@ -1410,19 +1651,31 @@ def setup_admin():
         hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
         with engine.connect() as conn:
-            conn.execute(text("""
-                INSERT INTO users (username, email, password, full_name, role, status)
-                VALUES (:username, :email, :password, :full_name, 'admin', 'active')
-                ON DUPLICATE KEY UPDATE
-                    password = VALUES(password),
-                    role     = 'admin',
-                    status   = 'active'
-            """), {
-                'username':  username,
-                'email':     email,
-                'password':  hashed,
-                'full_name': username,
-            })
+            check = conn.execute(
+                text("SELECT user_id FROM users WHERE username = :username"),
+                {'username': username}
+            ).mappings().first()
+
+            if check:
+                conn.execute(text("""
+                    UPDATE users
+                    SET email = :email, password = :password, role = 'admin', status = 'active'
+                    WHERE username = :username
+                """), {
+                    'username':  username,
+                    'email':     email,
+                    'password':  hashed,
+                })
+            else:
+                conn.execute(text("""
+                    INSERT INTO users (username, email, password, full_name, role, status)
+                    VALUES (:username, :email, :password, :full_name, 'admin', 'active')
+                """), {
+                    'username':  username,
+                    'email':     email,
+                    'password':  hashed,
+                    'full_name': username,
+                })
             conn.commit()
 
             row = conn.execute(

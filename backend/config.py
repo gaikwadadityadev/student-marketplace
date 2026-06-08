@@ -33,9 +33,22 @@ def _mysql_uri() -> str:
 class Config:
     """Application configuration class — production-hardened"""
 
-    # ==================== DATABASE ====================
-    # If DATABASE_URL is set directly, use it. Otherwise build from parts.
-    SQLALCHEMY_DATABASE_URI      = os.getenv('DATABASE_URL', _mysql_uri())
+    # If DATABASE_URL is set directly, use it and fix any deprecated postgres:// protocol.
+    # Otherwise check if MYSQL_HOST or MYSQLHOST is set and build MySQL URI.
+    # Finally, fall back to SQLite.
+    _db_url = os.getenv('DATABASE_URL')
+    if _db_url:
+        if _db_url.startswith('postgres://'):
+            _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+        SQLALCHEMY_DATABASE_URI = _db_url
+    elif os.getenv('MYSQL_HOST') or os.getenv('MYSQLHOST'):
+        SQLALCHEMY_DATABASE_URI = _mysql_uri()
+    else:
+        _db_path = os.path.normpath(os.path.join(os.path.dirname(__file__), 'student_marketplace.db'))
+        # SQLAlchemy requires forward slashes even on Windows for sqlite absolute paths
+        _db_path_posix = _db_path.replace('\\', '/')
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{_db_path_posix}'
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS    = {
         'pool_pre_ping': True,
