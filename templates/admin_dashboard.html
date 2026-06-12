@@ -243,10 +243,16 @@
                 <p>Monitor your marketplace, approve products, and track orders.</p>
             </div>
             <div class="welcome-date d-none d-md-block">
-                <div class="date">{{ now.strftime('%d') if now else '' }}</div>
-                <div class="day">{{ now.strftime('%B %Y') if now else '' }}</div>
+                <div class="date" id="currentDate"></div>
+                <div class="day" id="currentMonthYear"></div>
             </div>
         </div>
+
+        <script>
+            const d = new Date();
+            document.getElementById('currentDate').innerText = d.getDate();
+            document.getElementById('currentMonthYear').innerText = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        </script>
 
         <!-- Stats Grid -->
         <div class="row g-4 mb-4">
