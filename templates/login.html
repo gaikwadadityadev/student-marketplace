@@ -1,442 +1,185 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Student Marketplace{% endblock %}
+{% block title %}Sign In - Student Marketplace{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Full Page Background */
-    .login-page {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .auth-page {
+        min-height: calc(100vh - 150px);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px;
+        padding: 3rem 1rem;
+        background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.05), transparent 40%),
+                    radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.05), transparent 40%);
     }
 
-    /* Main Card Container */
-    .login-card {
-        background: white;
-        border-radius: 24px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    .auth-card {
+        background: var(--surface);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        width: 100%;
+        max-width: 480px;
+        padding: 3rem;
+        position: relative;
         overflow: hidden;
-        width: 100%;
-        max-width: 900px;
-        display: flex;
-        min-height: 500px;
-        animation: slideUp 0.5s ease-out;
+        animation: fadeInUp 0.5s ease-out;
     }
 
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
     }
 
-    /* Left Panel - Illustration */
-    .login-illustration {
-        flex: 1;
-        background: linear-gradient(180deg, #e8eef6 0%, #f5f8fc 100%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
-        position: relative;
-    }
-
-    .illustration-container {
+    .auth-header {
         text-align: center;
-        position: relative;
+        margin-bottom: 2.5rem;
     }
 
-    /* SVG Student Illustration */
-    .student-svg {
-        width: 280px;
-        height: 280px;
-        margin-bottom: 20px;
+    .auth-header i {
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        display: inline-block;
     }
 
-    /* Decorative Elements */
-    .deco-circle {
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(102, 126, 234, 0.1);
-    }
-
-    .deco-circle.c1 {
-        width: 100px;
-        height: 100px;
-        top: 20px;
-        left: 20px;
-    }
-
-    .deco-circle.c2 {
-        width: 60px;
-        height: 60px;
-        bottom: 40px;
-        right: 30px;
-        background: rgba(118, 75, 162, 0.1);
-    }
-
-    .deco-line {
-        position: absolute;
-        background: rgba(102, 126, 234, 0.2);
-    }
-
-    .deco-line.l1 {
-        width: 3px;
-        height: 80px;
-        left: 50px;
-        bottom: 80px;
-        border-radius: 3px;
-    }
-
-    .deco-dots {
-        position: absolute;
-        bottom: 60px;
-        left: 80px;
-        display: grid;
-        grid-template-columns: repeat(3, 8px);
-        gap: 6px;
-    }
-
-    .deco-dots span {
-        width: 8px;
-        height: 8px;
-        background: rgba(102, 126, 234, 0.3);
-        border-radius: 50%;
-    }
-
-    /* Right Panel - Form */
-    .login-form-panel {
-        flex: 1;
-        padding: 50px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .login-title {
+    .auth-header h1 {
         font-size: 1.75rem;
-        font-weight: 700;
-        color: #667eea;
-        margin-bottom: 8px;
-        text-align: center;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
     }
 
-    .login-subtitle {
-        color: #888;
-        font-size: 0.9rem;
-        margin-bottom: 32px;
-        text-align: center;
-    }
-
-    /* Form Inputs */
-    .input-group-modern {
-        position: relative;
-        margin-bottom: 20px;
-    }
-
-    .input-group-modern .input-icon {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #aaa;
-        font-size: 1.1rem;
-        transition: color 0.3s;
-    }
-
-    .input-group-modern input {
-        width: 100%;
-        padding: 16px 16px 16px 48px;
-        border: 2px solid #e8e8e8;
-        border-radius: 12px;
+    .auth-header p {
+        color: var(--text-muted);
         font-size: 0.95rem;
-        background: #fafafa;
-        transition: all 0.3s ease;
     }
 
-    .input-group-modern input:focus {
-        outline: none;
-        border-color: #667eea;
-        background: white;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    .form-floating > label {
+        color: var(--text-muted);
+        padding-left: 1.25rem;
     }
 
-    .input-group-modern input:focus+.input-icon,
-    .input-group-modern input:focus~.input-icon {
-        color: #667eea;
+    .form-floating > .form-control {
+        padding-left: 1.25rem;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-color);
+        background-color: var(--bg-main);
     }
 
-    .input-group-modern input::placeholder {
-        color: #aaa;
+    .form-floating > .form-control:focus {
+        border-color: var(--primary);
+        background-color: var(--surface);
+        box-shadow: none;
     }
 
-    /* Login Button */
-    .btn-login {
+    .btn-auth {
         width: 100%;
-        padding: 16px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 12px;
-        color: white;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin-top: 10px;
+        padding: 0.875rem;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+        border-radius: var(--radius-md);
     }
 
-    .btn-login:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-login:active {
-        transform: translateY(0);
-    }
-
-    /* Helper Text */
-    .helper-text {
-        text-align: center;
-        color: #888;
-        font-size: 0.85rem;
-        margin-top: 8px;
-        margin-bottom: 24px;
-    }
-
-    .helper-text a {
-        color: #667eea;
-        text-decoration: none;
-    }
-
-    .helper-text a:hover {
-        text-decoration: underline;
-    }
-
-    /* Divider */
-    .divider {
+    .auth-divider {
         display: flex;
         align-items: center;
-        margin: 24px 0;
-        color: #ccc;
-        font-size: 0.85rem;
+        margin: 2rem 0;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    .divider::before,
-    .divider::after {
+    .auth-divider::before, .auth-divider::after {
         content: '';
         flex: 1;
-        height: 1px;
-        background: #e8e8e8;
+        border-top: 1px solid var(--border-color);
     }
 
-    .divider span {
-        padding: 0 16px;
-        color: #999;
+    .auth-divider span {
+        padding: 0 1rem;
     }
 
-    /* Signup Link */
-    .signup-link {
+    .auth-links {
         text-align: center;
-        color: #666;
-        font-size: 0.9rem;
+        margin-top: 1.5rem;
+        font-size: 0.95rem;
     }
 
-    .signup-link a {
-        color: #667eea;
+    .auth-links a {
         font-weight: 600;
-        text-decoration: none;
     }
 
-    .signup-link a:hover {
-        text-decoration: underline;
-    }
-
-    /* Admin Link */
     .admin-link {
+        position: absolute;
+        bottom: 1.5rem;
+        left: 0;
+        right: 0;
         text-align: center;
-        margin-top: 16px;
+        font-size: 0.85rem;
     }
 
     .admin-link a {
-        color: #999;
-        font-size: 0.8rem;
+        color: var(--text-muted);
         text-decoration: none;
     }
 
     .admin-link a:hover {
-        color: #667eea;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .login-illustration {
-            display: none;
-        }
-
-        .login-card {
-            max-width: 400px;
-        }
-
-        .login-form-panel {
-            padding: 40px 30px;
-        }
-    }
-
-    /* Clock Icon */
-    .clock-deco {
-        position: absolute;
-        top: 30px;
-        right: 40px;
-        width: 50px;
-        height: 50px;
-        border: 3px solid rgba(102, 126, 234, 0.3);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .clock-deco::before {
-        content: '';
-        width: 2px;
-        height: 12px;
-        background: rgba(102, 126, 234, 0.5);
-        position: absolute;
-        top: 10px;
-        transform-origin: bottom;
-    }
-
-    .clock-deco::after {
-        content: '';
-        width: 2px;
-        height: 8px;
-        background: rgba(102, 126, 234, 0.5);
-        position: absolute;
-        transform: rotate(90deg);
-        left: 22px;
+        color: var(--primary);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="login-page">
-    <div class="login-card">
-        <!-- Left Panel - Illustration -->
-        <div class="login-illustration">
-            <!-- Decorative Elements -->
-            <div class="deco-circle c1"></div>
-            <div class="deco-circle c2"></div>
-            <div class="deco-line l1"></div>
-            <div class="deco-dots">
-                <span></span><span></span><span></span>
-                <span></span><span></span><span></span>
-                <span></span><span></span><span></span>
-            </div>
-            <div class="clock-deco"></div>
-
-            <!-- Student Illustration SVG -->
-            <div class="illustration-container">
-                <svg class="student-svg" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Laptop Base -->
-                    <rect x="80" y="180" width="140" height="10" rx="2" fill="#667eea" />
-                    <rect x="60" y="185" width="180" height="8" rx="4" fill="#5a67d8" />
-
-                    <!-- Laptop Screen -->
-                    <rect x="90" y="120" width="120" height="65" rx="4" fill="#4c51bf" />
-                    <rect x="95" y="125" width="110" height="55" rx="2" fill="#e8eef6" />
-
-                    <!-- Screen Content Lines -->
-                    <rect x="105" y="135" width="60" height="4" rx="2" fill="#667eea" opacity="0.5" />
-                    <rect x="105" y="145" width="80" height="4" rx="2" fill="#667eea" opacity="0.3" />
-                    <rect x="105" y="155" width="50" height="4" rx="2" fill="#667eea" opacity="0.3" />
-                    <rect x="105" y="165" width="70" height="4" rx="2" fill="#667eea" opacity="0.3" />
-
-                    <!-- Person Body -->
-                    <ellipse cx="150" cy="105" rx="25" ry="28" fill="#fcd5ce" />
-
-                    <!-- Hair -->
-                    <path
-                        d="M125 90 Q130 60 150 55 Q170 60 175 90 Q175 80 170 75 Q155 70 150 72 Q145 70 130 75 Q125 80 125 90Z"
-                        fill="#2d3748" />
-                    <ellipse cx="130" cy="95" rx="8" ry="15" fill="#2d3748" />
-                    <ellipse cx="170" cy="95" rx="8" ry="15" fill="#2d3748" />
-
-                    <!-- Face -->
-                    <circle cx="140" cy="100" r="2" fill="#2d3748" />
-                    <circle cx="160" cy="100" r="2" fill="#2d3748" />
-                    <path d="M145 112 Q150 116 155 112" stroke="#2d3748" stroke-width="2" fill="none"
-                        stroke-linecap="round" />
-
-                    <!-- Shirt -->
-                    <path d="M125 130 Q125 150 130 165 L170 165 Q175 150 175 130 Q160 140 150 138 Q140 140 125 130Z"
-                        fill="#667eea" />
-
-                    <!-- Arms -->
-                    <path d="M125 135 Q110 155 100 165" stroke="#fcd5ce" stroke-width="12" fill="none"
-                        stroke-linecap="round" />
-                    <path d="M175 135 Q190 155 200 165" stroke="#fcd5ce" stroke-width="12" fill="none"
-                        stroke-linecap="round" />
-
-                    <!-- Hands on Laptop -->
-                    <ellipse cx="105" cy="175" rx="12" ry="8" fill="#fcd5ce" />
-                    <ellipse cx="195" cy="175" rx="12" ry="8" fill="#fcd5ce" />
-
-                    <!-- Desk/Platform -->
-                    <rect x="50" y="195" width="200" height="60" rx="8" fill="#e2e8f0" />
-                    <rect x="70" y="220" width="30" height="35" rx="4" fill="#cbd5e0" />
-                    <rect x="200" y="220" width="30" height="35" rx="4" fill="#cbd5e0" />
-                </svg>
-
-                <p style="color: #667eea; font-weight: 500; font-size: 0.9rem;">Access your Student Account</p>
-            </div>
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="bi bi-person-circle"></i>
+            <h1>Welcome Back</h1>
+            <p>Sign in to your student account</p>
         </div>
 
-        <!-- Right Panel - Form -->
-        <div class="login-form-panel">
-            <h1 class="login-title">Student Login</h1>
-            <p class="login-subtitle">Hey, enter your details to sign in to your account</p>
-
-            <form method="POST" action="{{ url_for('login') }}">
-                <div class="input-group-modern">
-                    <i class="bi bi-person input-icon"></i>
-                    <input type="text" name="username" placeholder="Enter your username/email" required autofocus>
-                </div>
-
-                <div class="input-group-modern">
-                    <i class="bi bi-lock input-icon"></i>
-                    <input type="password" name="password" placeholder="Enter your password" required>
-                </div>
-
-                <p class="helper-text">
-                    Having trouble in sign in? <a href="#">Get help</a>
-                </p>
-
-                <button type="submit" class="btn-login">
-                    Login In
-                </button>
-            </form>
-
-            <div class="divider">
-                <span>Or</span>
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="username" name="username" placeholder="Username" required autofocus>
+                <label for="username">Username or Email</label>
+            </div>
+            
+            <div class="form-floating mb-4">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                <label for="password">Password</label>
             </div>
 
-            <p class="signup-link">
-                Don't have an account? <a href="{{ url_for('register') }}">Signup Now</a>
-            </p>
-
-            <div class="admin-link">
-                <a href="{{ url_for('admin_login') }}"><i class="bi bi-shield-lock me-1"></i>Admin Login</a>
+            <div class="d-flex justify-content-between align-items-center mb-4 px-1">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                    <label class="form-check-label text-muted small" for="rememberMe">
+                        Remember me
+                    </label>
+                </div>
+                <a href="#" class="small fw-medium">Forgot password?</a>
             </div>
+
+            <button type="submit" class="btn btn-primary btn-auth">Sign In</button>
+        </form>
+
+        <div class="auth-divider">
+            <span>New here?</span>
+        </div>
+
+        <div class="auth-links mb-4">
+            <span class="text-muted">Don't have an account?</span> 
+            <a href="{{ url_for('register') }}">Create one now</a>
+        </div>
+
+        <div class="admin-link">
+            <a href="{{ url_for('admin_login') }}"><i class="bi bi-shield-lock me-1"></i>Admin Portal</a>
         </div>
     </div>
 </div>

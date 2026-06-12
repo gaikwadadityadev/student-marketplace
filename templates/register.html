@@ -1,277 +1,106 @@
 {% extends "base.html" %}
 
-{% block title %}Register - Student Marketplace{% endblock %}
+{% block title %}Create Account - Student Marketplace{% endblock %}
 
 {% block extra_css %}
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
 <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Outfit', sans-serif;
-        overflow-x: hidden;
-    }
-
-    /* Animated Gradient Background */
-    .register-page {
-        min-height: 100vh;
+    .auth-page {
+        min-height: calc(100vh - 150px);
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(-45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
-        background-size: 400% 400%;
-        animation: gradientShift 15s ease infinite;
+        padding: 3rem 1rem;
+        background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.05), transparent 40%),
+                    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.05), transparent 40%);
+    }
+
+    .auth-card {
+        background: var(--surface);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        width: 100%;
+        max-width: 600px;
+        padding: 3rem;
         position: relative;
         overflow: hidden;
-        padding: 20px;
+        animation: fadeInUp 0.5s ease-out;
     }
 
-    @keyframes gradientShift {
-        0% {
-            background-position: 0% 50%;
-        }
-
-        50% {
-            background-position: 100% 50%;
-        }
-
-        100% {
-            background-position: 0% 50%;
-        }
-    }
-
-    /* Floating Particles */
-    .particle {
+    .auth-card::before {
+        content: '';
         position: absolute;
-        width: 20px;
-        height: 20px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 50%;
-        animation: float 20s infinite ease-in-out;
+        top: 0; left: 0; right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, var(--primary), var(--success));
     }
 
-    .particle:nth-child(1) {
-        top: 10%;
-        left: 20%;
-        width: 80px;
-        height: 80px;
-        animation-delay: 0s;
-        animation-duration: 25s;
-    }
-
-    .particle:nth-child(2) {
-        top: 70%;
-        left: 80%;
-        width: 60px;
-        height: 60px;
-        animation-delay: 2s;
-        animation-duration: 20s;
-    }
-
-    .particle:nth-child(3) {
-        top: 40%;
-        left: 10%;
-        width: 40px;
-        height: 40px;
-        animation-delay: 4s;
-        animation-duration: 22s;
-    }
-
-    .particle:nth-child(4) {
-        top: 20%;
-        left: 90%;
-        width: 50px;
-        height: 50px;
-        animation-delay: 1s;
-        animation-duration: 18s;
-    }
-
-    .particle:nth-child(5) {
-        top: 80%;
-        left: 30%;
-        width: 70px;
-        height: 70px;
-        animation-delay: 3s;
-        animation-duration: 24s;
-    }
-
-    @keyframes float {
-
-        0%,
-        100% {
-            transform: translateY(0) translateX(0) scale(1);
-            opacity: 0.3;
-        }
-
-        25% {
-            transform: translateY(-50px) translateX(30px) scale(1.1);
-            opacity: 0.5;
-        }
-
-        50% {
-            transform: translateY(-100px) translateX(-30px) scale(0.9);
-            opacity: 0.4;
-        }
-
-        75% {
-            transform: translateY(-50px) translateX(50px) scale(1.05);
-            opacity: 0.6;
-        }
-    }
-
-    /* Glassmorphism Card */
-    .register-container {
-        position: relative;
-        z-index: 10;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        padding: 60px 50px;
-        max-width: 500px;
-        width: 100%;
-        animation: fadeInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(50px) scale(0.9);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    /* Header Section */
-    .register-header {
+    .auth-header {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 2rem;
     }
 
-    .brand-logo {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        animation: pulse 2s infinite;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-    }
-
-    .brand-logo i {
+    .auth-header i {
         font-size: 2.5rem;
-        color: white;
+        background: linear-gradient(135deg, var(--primary), var(--success));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        display: inline-block;
     }
 
-    @keyframes pulse {
-
-        0%,
-        100% {
-            transform: scale(1);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        50% {
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
-        }
-    }
-
-    .register-title {
-        font-size: 2.5rem;
+    .auth-header h1 {
+        font-size: 1.75rem;
         font-weight: 800;
-        color: white;
-        margin-bottom: 10px;
-        letter-spacing: -1px;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        margin-bottom: 0.5rem;
     }
 
-    .register-subtitle {
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 300;
+    .auth-header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
     }
 
-    /* Form Styles */
-    .register-form {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+    .form-floating > label {
+        color: var(--text-muted);
+        padding-left: 1.25rem;
     }
 
-    .form-group {
-        position: relative;
+    .form-floating > .form-control {
+        padding-left: 1.25rem;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-color);
+        background-color: var(--bg-main);
     }
 
-    .form-label {
-        display: block;
-        color: rgba(255, 255, 255, 0.95);
-        font-size: 0.9rem;
-        font-weight: 500;
-        margin-bottom: 8px;
-        padding-left: 5px;
+    .form-floating > .form-control:focus {
+        border-color: var(--primary);
+        background-color: var(--surface);
+        box-shadow: none;
     }
 
-    .form-input {
+    .btn-auth {
         width: 100%;
-        padding: 16px 20px;
-        background: rgba(255, 255, 255, 0.2);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 15px;
-        color: white;
-        font-size: 1rem;
-        font-family: 'Outfit', sans-serif;
-        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        backdrop-filter: blur(5px);
+        padding: 0.875rem;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+        border-radius: var(--radius-md);
     }
 
-    .form-input::placeholder {
-        color: rgba(255, 255, 255, 0.6);
+    .auth-links {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.95rem;
     }
 
-    .form-input:focus {
-        outline: none;
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.6);
-        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
-        transform: translateY(-2px);
-    }
-
-    .form-input:hover {
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.4);
-    }
-
-    /* Input Icons */
-    .input-icon {
-        position: absolute;
-        right: 18px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 1.2rem;
-        pointer-events: none;
+    .auth-links a {
+        font-weight: 600;
     }
 
     /* Password Strength Indicator */
     .password-strength {
         margin-top: 8px;
         height: 4px;
-        background: rgba(255, 255, 255, 0.2);
+        background: var(--border-color);
         border-radius: 10px;
         overflow: hidden;
         display: none;
@@ -288,225 +117,95 @@
         border-radius: 10px;
     }
 
-    .strength-weak {
-        width: 33%;
-        background: #ff4757;
-    }
-
-    .strength-medium {
-        width: 66%;
-        background: #ffa502;
-    }
-
-    .strength-strong {
-        width: 100%;
-        background: #26de81;
-    }
+    .strength-weak { width: 33%; background: var(--danger); }
+    .strength-medium { width: 66%; background: var(--warning); }
+    .strength-strong { width: 100%; background: var(--success); }
 
     .strength-text {
         font-size: 0.75rem;
-        color: rgba(255, 255, 255, 0.8);
         margin-top: 5px;
         display: none;
+        padding-left: 5px;
     }
-
-    .strength-text.active {
-        display: block;
-    }
-
-    /* Submit Button */
-    .btn-submit {
-        width: 100%;
-        padding: 18px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 15px;
-        color: white;
-        font-size: 1.1rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        margin-top: 10px;
-        text-transform: uppercase;
-    }
-
-    .btn-submit:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
-        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-    }
-
-    .btn-submit:active {
-        transform: translateY(-1px);
-    }
-
-    /* Login Link */
-    .login-redirect {
-        text-align: center;
-        margin-top: 25px;
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 0.95rem;
-    }
-
-    .login-redirect a {
-        color: white;
-        font-weight: 700;
-        text-decoration: none;
-        border-bottom: 2px solid white;
-        padding-bottom: 2px;
-        transition: all 0.3s ease;
-    }
-
-    .login-redirect a:hover {
-        color: #667eea;
-        border-bottom-color: #667eea;
-        transform: translateY(-2px);
-    }
-
-    /* Divider */
-    .divider {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin: 25px 0;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.9rem;
-    }
-
-    .divider::before,
-    .divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.3);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .register-container {
-            padding: 40px 30px;
-        }
-
-        .register-title {
-            font-size: 2rem;
-        }
-
-        .register-subtitle {
-            font-size: 0.9rem;
-        }
-
-        .brand-logo {
-            width: 60px;
-            height: 60px;
-        }
-
-        .brand-logo i {
-            font-size: 2rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .register-container {
-            padding: 35px 25px;
-        }
-
-        .register-title {
-            font-size: 1.75rem;
-        }
-
-        .form-input {
-            padding: 14px 18px;
-            font-size: 0.95rem;
-        }
-
-        .btn-submit {
-            padding: 16px;
-            font-size: 1rem;
-        }
-    }
+    .strength-text.active { display: block; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="register-page">
-    <!-- Floating Particles -->
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-
-    <!-- Registration Container -->
-    <div class="register-container">
-        <!-- Header -->
-        <div class="register-header">
-            <div class="brand-logo">
-                <i class="bi bi-mortarboard-fill"></i>
-            </div>
-            <h1 class="register-title">Join Us Today</h1>
-            <p class="register-subtitle">Create your account and unlock endless possibilities</p>
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="bi bi-mortarboard-fill"></i>
+            <h1>Join StudentMarket</h1>
+            <p>Create your account to start buying and selling</p>
         </div>
 
-        <!-- Registration Form -->
-        <form method="POST" action="{{ url_for('register') }}" id="registerForm" class="register-form">
-            <!-- Full Name -->
-            <div class="form-group">
-                <label class="form-label">Full Name</label>
-                <input type="text" class="form-input" name="full_name" placeholder="Enter your full name" required>
+        <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" name="full_name" id="full_name" placeholder="Full Name" required>
+                        <label for="full_name">Full Name</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" name="username" id="username" placeholder="Username" required>
+                        <label for="username">Username</label>
+                    </div>
+                </div>
             </div>
 
-            <!-- Username -->
-            <div class="form-group">
-                <label class="form-label">Username</label>
-                <input type="text" class="form-input" name="username" placeholder="Choose a username" required>
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" name="email" id="email" placeholder="name@example.com" required>
+                <label for="email">Email address</label>
             </div>
 
-            <!-- Email -->
-            <div class="form-group">
-                <label class="form-label">Email Address</label>
-                <input type="email" class="form-input" name="email" placeholder="your.email@example.com" required>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-floating">
+                        <input type="tel" class="form-control" name="phone" id="phone" placeholder="Phone">
+                        <label for="phone">Phone (Optional)</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-floating position-relative">
+                        <input type="text" class="form-control" name="college_id" id="collegeIdInput" placeholder="College ID" maxlength="12">
+                        <label for="collegeIdInput">College ID (Optional)</label>
+                    </div>
+                    <div id="collegeIdError" class="text-danger small mt-1 ps-2" style="display:none;"></div>
+                </div>
             </div>
 
-            <!-- Phone (Optional) -->
-            <div class="form-group">
-                <label class="form-label">Phone Number (Optional)</label>
-                <input type="tel" class="form-input" name="phone" placeholder="+1 (555) 000-0000">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">College ID <span style="font-size:0.75rem;opacity:0.8;">(Optional - 12 digits, starts
-                        with 2023, 2024, 2025, or 2026)</span></label>
-                <input type="text" class="form-input" name="college_id" id="collegeIdInput"
-                    placeholder="e.g. 202301020012 (optional)" maxlength="12">
-                <span id="collegeIdError"
-                    style="display:none;color:#ff4757;font-size:0.8rem;margin-top:6px;padding-left:4px;"></span>
-            </div>
-
-            <!-- Password -->
-            <div class="form-group">
-                <label class="form-label">Password</label>
-                <input type="password" class="form-input" name="password" id="passwordInput"
-                    placeholder="Create a strong password" required>
+            <div class="form-floating mb-4">
+                <input type="password" class="form-control" name="password" id="passwordInput" placeholder="Password" required>
+                <label for="passwordInput">Password</label>
                 <div class="password-strength" id="passwordStrength">
                     <div class="strength-bar" id="strengthBar"></div>
                 </div>
-                <div class="strength-text" id="strengthText"></div>
+                <div class="strength-text fw-medium" id="strengthText"></div>
             </div>
 
-            <!-- Submit Button -->
-            <button type="submit" class="btn-submit">Create Account</button>
+            <div class="form-check mb-4 px-2">
+                <input class="form-check-input" type="checkbox" id="terms" required>
+                <label class="form-check-label text-muted small" for="terms">
+                    I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-auth">Create Account</button>
         </form>
 
-        <!-- Login Redirect -->
-        <div class="login-redirect">
-            Already have an account? <a href="{{ url_for('login') }}">Log in here</a>
+        <div class="auth-links mt-4">
+            <span class="text-muted">Already have an account?</span> 
+            <a href="{{ url_for('login') }}">Sign In instead</a>
         </div>
     </div>
 </div>
 
-<!-- JavaScript for Password Strength -->
+{% endblock %}
+
+{% block extra_js %}
 <script>
     const passwordInput = document.getElementById('passwordInput');
     const passwordStrength = document.getElementById('passwordStrength');
@@ -515,7 +214,7 @@
 
     passwordInput.addEventListener('input', function () {
         const password = this.value;
-        const strength = calculatePasswordStrength(password);
+        let strength = 0;
 
         if (password.length === 0) {
             passwordStrength.classList.remove('active');
@@ -525,107 +224,46 @@
 
         passwordStrength.classList.add('active');
         strengthText.classList.add('active');
+        strengthBar.className = 'strength-bar';
 
-        // Remove all strength classes
-        strengthBar.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+        if (password.length >= 8) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^a-zA-Z0-9]/.test(password)) strength++;
 
-        // Add appropriate class based on strength
-        if (strength < 3) {
+        if (strength < 2) {
             strengthBar.classList.add('strength-weak');
-            strengthText.textContent = 'Weak password';
-            strengthText.style.color = '#ff4757';
-        } else if (strength < 5) {
+            strengthText.textContent = 'Weak';
+            strengthText.style.color = 'var(--danger)';
+        } else if (strength < 4) {
             strengthBar.classList.add('strength-medium');
-            strengthText.textContent = 'Medium strength';
-            strengthText.style.color = '#ffa502';
+            strengthText.textContent = 'Medium';
+            strengthText.style.color = 'var(--warning)';
         } else {
             strengthBar.classList.add('strength-strong');
-            strengthText.textContent = 'Strong password';
-            strengthText.style.color = '#26de81';
+            strengthText.textContent = 'Strong';
+            strengthText.style.color = 'var(--success)';
         }
     });
 
-    function calculatePasswordStrength(password) {
-        let strength = 0;
-
-        // Length check
-        if (password.length >= 8) strength++;
-        if (password.length >= 12) strength++;
-
-        // Complexity checks
-        if (/[a-z]/.test(password)) strength++; // lowercase
-        if (/[A-Z]/.test(password)) strength++; // uppercase
-        if (/[0-9]/.test(password)) strength++; // numbers
-        if (/[^a-zA-Z0-9]/.test(password)) strength++; // special chars
-
-        return strength;
-    }
-
-    // ==================== COLLEGE ID VALIDATION ====================
     const collegeIdInput = document.getElementById('collegeIdInput');
     const collegeIdError = document.getElementById('collegeIdError');
-
-    function validateCollegeId(value) {
-        // Must be exactly 12 digits and start with 2023-2026 (or empty = valid)
-        if (!value) return true;
-        return /^(202[3-6])\d{8}$/.test(value);
-    }
-
-    function showCollegeIdError(msg) {
-        collegeIdError.textContent = msg;
-        collegeIdError.style.display = 'block';
-        collegeIdInput.style.borderColor = '#ff4757';
-    }
-
-    function clearCollegeIdError() {
-        collegeIdError.style.display = 'none';
-        collegeIdError.textContent = '';
-        collegeIdInput.style.borderColor = '';
-    }
 
     collegeIdInput.addEventListener('input', function () {
         const val = this.value.trim();
         if (val.length === 0) {
-            clearCollegeIdError();
+            collegeIdError.style.display = 'none';
+            collegeIdInput.style.borderColor = '';
             return;
         }
-        if (validateCollegeId(val)) {
-            clearCollegeIdError();
-            collegeIdInput.style.borderColor = '#26de81';
+        if (/^(202[3-6])\d{8}$/.test(val)) {
+            collegeIdError.style.display = 'none';
+            collegeIdInput.style.borderColor = 'var(--success)';
         } else {
-            showCollegeIdError('Invalid College ID. It must be 12 digits and follow format 2023XXXXXXXX');
+            collegeIdError.textContent = 'Must be 12 digits starting with 2023-2026';
+            collegeIdError.style.display = 'block';
+            collegeIdInput.style.borderColor = 'var(--danger)';
         }
-    });
-
-    // Form submission animation
-    const registerForm = document.getElementById('registerForm');
-    const submitBtn = document.querySelector('.btn-submit');
-
-    registerForm.addEventListener('submit', function (e) {
-        const val = collegeIdInput.value.trim();
-        if (val && !validateCollegeId(val)) {
-            e.preventDefault();
-            showCollegeIdError('Invalid College ID. Must be 12 digits starting with 2023, 2024, 2025, or 2026.');
-            collegeIdInput.focus();
-            return;
-        }
-        submitBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Creating Account...';
-        submitBtn.style.pointerEvents = 'none';
-    });
-
-    // Add smooth scroll behavior
-    document.documentElement.style.scrollBehavior = 'smooth';
-
-    // Input focus animations
-    const inputs = document.querySelectorAll('.form-input');
-    inputs.forEach(input => {
-        input.addEventListener('focus', function () {
-            this.parentElement.style.transform = 'scale(1.02)';
-        });
-
-        input.addEventListener('blur', function () {
-            this.parentElement.style.transform = 'scale(1)';
-        });
     });
 </script>
 {% endblock %}
