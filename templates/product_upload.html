@@ -2,75 +2,297 @@
 
 {% block title %}Upload Product - Student Marketplace{% endblock %}
 
+{% block extra_css %}
+<style>
+    .upload-page-bg {
+        min-height: calc(100vh - 150px);
+        background: linear-gradient(180deg, var(--bg-main) 0%, #ffffff 100%);
+        padding: 4rem 0;
+    }
+
+    .upload-card {
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+    }
+
+    .upload-header {
+        background: linear-gradient(135deg, var(--primary) 0%, #312e81 100%);
+        color: white;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .upload-header::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: var(--surface);
+        transform: skewY(-3deg);
+    }
+
+    .upload-header-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .upload-icon {
+        width: 70px;
+        height: 70px;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .upload-body {
+        padding: 3rem 2.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 2px solid var(--border-color);
+        padding: 0.8rem 1rem;
+        background: var(--bg-main);
+        transition: all 0.3s;
+        font-size: 1rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        background: white;
+    }
+
+    /* Custom File Upload */
+    .file-upload-wrapper {
+        position: relative;
+        width: 100%;
+        height: 150px;
+        border: 2px dashed var(--border-color);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-main);
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .file-upload-wrapper:hover {
+        border-color: var(--primary);
+        background: rgba(79, 70, 229, 0.02);
+    }
+
+    .file-upload-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .file-upload-content {
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .file-upload-content i {
+        font-size: 2.5rem;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .info-alert {
+        background: rgba(14, 165, 233, 0.1);
+        border: 1px solid rgba(14, 165, 233, 0.2);
+        color: #0284c7;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-cancel {
+        background: var(--bg-main);
+        color: var(--text-muted);
+        border: 2px solid var(--border-color);
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-cancel:hover {
+        background: var(--border-color);
+        color: var(--text-main);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="bi bi-upload"></i> Upload Product</h3>
-                </div>
-                <div class="card-body p-4">
-                    <form method="POST" action="{{ url_for('product_upload') }}" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Product Name *</label>
-                            <input type="text" class="form-control" id="name" name="name" required
-                                placeholder="e.g., Calculus Textbook">
+<div class="upload-page-bg">
+    <div class="container animate-fade-up">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="upload-card">
+                    
+                    <div class="upload-header">
+                        <div class="upload-header-content">
+                            <div class="upload-icon">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                            </div>
+                            <h2 class="fw-bold mb-1">List Your Item</h2>
+                            <p class="opacity-75 mb-0">Fill in the details to start selling on campus</p>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description *</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" required
-                                placeholder="Describe your product..."></textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="price" class="form-label">Price (₹) *</label>
-                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0.01"
-                                    required placeholder="0.00">
+                    <div class="upload-body">
+                        <form method="POST" action="{{ url_for('product_upload') }}" enctype="multipart/form-data" id="uploadForm">
+                            
+                            <div class="form-group">
+                                <label for="name" class="form-label">What are you selling? <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required placeholder="e.g., Physics Textbook, Scientific Calculator">
                             </div>
 
-                            <div class="col-md-4 mb-3">
-                                <label for="stock" class="form-label">Stock *</label>
-                                <input type="number" class="form-control" id="stock" name="stock" min="0" required
-                                    placeholder="0">
+                            <div class="form-group">
+                                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="description" name="description" rows="4" required placeholder="Include details like condition, age, reasons for selling..."></textarea>
                             </div>
 
-                            <div class="col-md-4 mb-3">
-                                <label for="category" class="form-label">Category *</label>
-                                <select class="form-select" id="category" name="category" required>
-                                    <option value="">Select Category</option>
-                                    <option value="Books">Books</option>
-                                    <option value="Gadgets">Gadgets</option>
-                                    <option value="Accessories">Accessories</option>
-                                    <option value="Electronics">Electronics</option>
-                                    <option value="Clothing">Clothing</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-4 form-group mb-0">
+                                    <label for="price" class="form-label">Price (₹) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 border-2 text-muted fw-bold">₹</span>
+                                        <input type="number" class="form-control border-start-0 ps-0" id="price" name="price" step="0.01" min="0.01" required placeholder="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 form-group mb-0">
+                                    <label for="stock" class="form-label">Available Stock <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="stock" name="stock" min="1" required placeholder="1">
+                                </div>
+
+                                <div class="col-md-4 form-group mb-0">
+                                    <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">Select...</option>
+                                        <option value="Books & Notes">Books & Notes</option>
+                                        <option value="Electronics">Electronics</option>
+                                        <option value="Clothing">Clothing</option>
+                                        <option value="Sports">Sports</option>
+                                        <option value="Accessories">Accessories</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Product Image</label>
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                            <small class="form-text text-muted">Supported formats: JPG, PNG, GIF, WEBP (Max
-                                16MB)</small>
-                        </div>
+                            <div class="form-group mb-2">
+                                <label for="image" class="form-label">Product Image</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" class="file-upload-input" id="image" name="image" accept="image/*" onchange="updateFileName(this)">
+                                    <div class="file-upload-content" id="uploadContent">
+                                        <i class="bi bi-image"></i>
+                                        <h6 class="fw-bold mb-1">Click to upload an image</h6>
+                                        <p class="small mb-0">JPG, PNG, WEBP (Max 16MB)</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Your product will be reviewed by admin before it becomes
-                            visible to other students.
-                        </div>
+                            <div class="info-alert">
+                                <i class="bi bi-shield-check fs-4 mt-1"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Admin Approval Required</h6>
+                                    <p class="small mb-0 text-opacity-75">To ensure a safe marketplace, all new product listings are reviewed by the campus admin before they become visible to other students.</p>
+                                </div>
+                            </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Upload Product</button>
-                        </div>
-                    </form>
+                            <div class="d-flex justify-content-between align-items-center mt-5">
+                                <a href="{{ url_for('dashboard') }}" class="btn-cancel text-decoration-none">Cancel</a>
+                                <button type="submit" class="btn-submit" id="submitBtn">
+                                    <i class="bi bi-upload me-2"></i> List Product
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    function updateFileName(input) {
+        const content = document.getElementById('uploadContent');
+        if (input.files && input.files.length > 0) {
+            const fileName = input.files[0].name;
+            content.innerHTML = `
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <h6 class="fw-bold text-success mb-1">Image Selected</h6>
+                <p class="small text-muted mb-0">${fileName}</p>
+            `;
+            content.parentElement.style.borderColor = 'var(--success)';
+            content.parentElement.style.background = 'rgba(16, 185, 129, 0.05)';
+        } else {
+            content.innerHTML = `
+                <i class="bi bi-image"></i>
+                <h6 class="fw-bold mb-1">Click to upload an image</h6>
+                <p class="small mb-0">JPG, PNG, WEBP (Max 16MB)</p>
+            `;
+            content.parentElement.style.borderColor = 'var(--border-color)';
+            content.parentElement.style.background = 'var(--bg-main)';
+        }
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+        btn.disabled = true;
+    });
+</script>
 {% endblock %}
