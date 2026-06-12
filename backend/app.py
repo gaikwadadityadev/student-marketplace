@@ -110,7 +110,7 @@ def create_all_tables():
                         order_id INT PRIMARY KEY AUTO_INCREMENT,
                         buyer_id INT NOT NULL,
                         total_amount DECIMAL(10,2) NOT NULL,
-                        status ENUM('pending','completed','cancelled') DEFAULT 'pending',
+                        status ENUM('pending','approved','rejected','completed','cancelled') DEFAULT 'pending',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         address TEXT,
                         city VARCHAR(100),
