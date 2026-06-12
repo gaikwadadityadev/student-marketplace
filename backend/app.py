@@ -19,7 +19,7 @@ app = Flask(__name__,
             static_folder='../static')
 app.config.from_object(Config)
 app.secret_key = app.config.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-CORS(app, resources={r"/api/*": {"origins": app.config.get('CORS_ORIGINS', '*')}})
+CORS(app, resources={r"/*": {"origins": app.config.get('CORS_ORIGINS', '*')}})
 
 # Add custom Jinja2 filter for product images
 @app.template_filter('product_image')
@@ -46,8 +46,13 @@ os.makedirs(PRODUCTS_UPLOAD_DIR, exist_ok=True)
 # Database engine — add SSL connect_args for PostgreSQL
 _db_uri = app.config['SQLALCHEMY_DATABASE_URI']
 _engine_kwargs = {'pool_pre_ping': True}
+
+# Apply connection pool optimizations from config
+_engine_kwargs.update(app.config.get('SQLALCHEMY_ENGINE_OPTIONS', {}))
+
 if _db_uri.startswith('postgresql'):
     _engine_kwargs['connect_args'] = {'sslmode': 'require'}
+    
 engine = create_engine(_db_uri, **_engine_kwargs)
 print(f'[OK] Engine created: dialect={engine.dialect.name}, db={_db_uri[:40]}...')
 
@@ -1813,7 +1818,27 @@ def setup_admin():
         return jsonify({'error': str(e)}), 500
 
 
+# ==================== HEALTH CHECK ====================
+@app.route('/api/health')
+def health_check():
+    """Health check endpoint to keep services awake"""
+    try:
+        # Check database connection
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+        
+    return jsonify({
+        'status': 'awake',
+        'database': db_status,
+        'timestamp': datetime.now().isoformat()
+    })
+
+
 # ==================== RUN APPLICATION ====================
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=app.config.get('DEBUG', False))
 
