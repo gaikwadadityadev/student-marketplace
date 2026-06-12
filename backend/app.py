@@ -1420,9 +1420,9 @@ def admin_dashboard():
         with engine.connect() as conn:
             # Get pending products
             pending_query = text("""
-                SELECT p.*, u.username, u.full_name 
+                SELECT p.*, COALESCE(u.username, 'Unknown') as username, COALESCE(u.full_name, 'Unknown') as full_name 
                 FROM products p 
-                JOIN users u ON p.seller_id = u.user_id 
+                LEFT JOIN users u ON p.seller_id = u.user_id 
                 WHERE p.status = 'pending'
                 ORDER BY p.created_at DESC
             """)
