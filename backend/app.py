@@ -314,6 +314,22 @@ def create_all_tables():
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_products_status ON products (status)"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS idx_products_category ON products (category)"))
 
+            # Auto-migrate: Add missing columns if they don't exist (fails silently if they do)
+            try:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN address TEXT"))
+            except Exception:
+                pass
+            
+            try:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN city VARCHAR(100)"))
+            except Exception:
+                pass
+                
+            try:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN zip_code VARCHAR(20)"))
+            except Exception:
+                pass
+
             conn.commit()
             print('[OK] Database tables created/verified successfully')
 
