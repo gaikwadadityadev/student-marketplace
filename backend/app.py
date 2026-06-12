@@ -994,6 +994,20 @@ def product_view(product_id):
             
             product = dict(product_result)
             
+            # Sanitize data for Jinja template
+            if 'price' in product and product['price'] is not None:
+                try:
+                    product['price'] = float(product['price'])
+                except Exception:
+                    pass
+            
+            if 'created_at' in product and product['created_at'] is not None:
+                if isinstance(product['created_at'], str):
+                    try:
+                        product['created_at'] = datetime.strptime(product['created_at'].split('.')[0], '%Y-%m-%d %H:%M:%S')
+                    except Exception:
+                        pass
+            
             # Get rating info
             rating_info = calculate_average_rating(product_id)
             product['avg_rating'] = rating_info['average']
