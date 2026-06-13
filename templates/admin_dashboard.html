@@ -351,6 +351,7 @@
                 <div class="section-card" id="ordersSection">
                     <div class="section-header">
                         <h3 class="section-title"><i class="bi bi-receipt-cutoff"></i> Order Management</h3>
+                        <a href="{{ url_for('admin_orders') }}" class="btn btn-sm btn-outline-light">View All Orders</a>
                     </div>
                     <div>
                         {% if orders %}
@@ -375,31 +376,26 @@
                                         </td>
                                         <td class="fw-semibold">₹{{ "%.0f"|format(order.total_amount) }}</td>
                                         <td id="status-cell-{{ order.order_id }}">
-                                            {% if order.status == 'completed' %}
-                                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25">Completed</span>
-                                            {% elif order.status == 'approved' %}
-                                                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25">Approved</span>
-                                            {% elif order.status == 'rejected' %}
-                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25">Rejected</span>
-                                            {% else %}
+                                            {% if order.status == 'delivered' %}
+                                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25">Delivered</span>
+                                            {% elif order.status == 'cancelled' %}
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25">Cancelled</span>
+                                            {% elif order.status == 'pending' %}
                                                 <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25">Pending</span>
+                                            {% else %}
+                                                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25">{{ order.status|title|replace('_', ' ') }}</span>
                                             {% endif %}
                                         </td>
                                         <td class="text-end text-nowrap" id="action-cell-{{ order.order_id }}">
-                                            {% if order.status == 'pending' %}
-                                                <button type="button" class="btn-action btn-approve me-1" onclick="updateOrderStatus({{ order.order_id }}, 'approved')" title="Approve">
-                                                    <i class="bi bi-check-lg"></i>
-                                                </button>
-                                                <button type="button" class="btn-action btn-reject" onclick="updateOrderStatus({{ order.order_id }}, 'rejected')" title="Reject">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-                                            {% elif order.status == 'approved' %}
-                                                <button type="button" class="btn-action btn-complete" onclick="updateOrderStatus({{ order.order_id }}, 'completed')" title="Complete">
-                                                    <i class="bi bi-check-all"></i>
-                                                </button>
-                                            {% else %}
-                                                <span class="text-muted opacity-50">—</span>
-                                            {% endif %}
+                                            <select class="form-select form-select-sm bg-dark text-white border-secondary d-inline-block w-auto" onchange="updateOrderStatus({{ order.order_id }}, this.value)">
+                                                <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                                <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                                <option value="packed" {% if order.status == 'packed' %}selected{% endif %}>Packed</option>
+                                                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                                <option value="out_for_delivery" {% if order.status == 'out_for_delivery' %}selected{% endif %}>Out for Delivery</option>
+                                                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                            </select>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -442,20 +438,18 @@
                 const actionCell = document.getElementById(`action-cell-${orderId}`);
                 
                 // Update Status Badge
-                if (status === 'approved') {
-                    statusCell.innerHTML = '<span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25">Approved</span>';
-                    actionCell.innerHTML = `
-                        <button type="button" class="btn-action btn-complete" 
-                                onclick="updateOrderStatus(${orderId}, 'completed')" title="Complete">
-                            <i class="bi bi-check-all"></i>
-                        </button>`;
-                } else if (status === 'completed') {
-                    statusCell.innerHTML = '<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25">Completed</span>';
-                    actionCell.innerHTML = '<span class="text-muted opacity-50">—</span>';
-                } else if (status === 'rejected' || status === 'cancelled') {
-                    statusCell.innerHTML = '<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25">Rejected</span>';
-                    actionCell.innerHTML = '<span class="text-muted opacity-50">—</span>';
+                let badgeClass = 'bg-info bg-opacity-25 text-info border border-info border-opacity-25';
+                let displayStatus = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                if (status === 'delivered') {
+                    badgeClass = 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
+                } else if (status === 'cancelled') {
+                    badgeClass = 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
+                } else if (status === 'pending') {
+                    badgeClass = 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
                 }
+                
+                statusCell.innerHTML = `<span class="badge ${badgeClass}">${displayStatus}</span>`;
             } else {
                 alert('Error updating order: ' + (data.error || 'Unknown error'));
             }

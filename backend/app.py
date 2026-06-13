@@ -115,10 +115,12 @@ def create_all_tables():
                         order_id INT PRIMARY KEY AUTO_INCREMENT,
                         buyer_id INT NOT NULL,
                         total_amount DECIMAL(10,2) NOT NULL,
-                        status ENUM('pending','approved','rejected','completed','cancelled') DEFAULT 'pending',
+                        status ENUM('pending','confirmed','packed','shipped','out_for_delivery','delivered','cancelled') DEFAULT 'pending',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        expected_delivery_date TIMESTAMP NULL,
                         address TEXT,
                         city VARCHAR(100),
+                        state VARCHAR(100),
                         zip_code VARCHAR(20),
                         FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -198,8 +200,10 @@ def create_all_tables():
                         total_amount DECIMAL(10,2) NOT NULL,
                         status VARCHAR(20) DEFAULT 'pending',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        expected_delivery_date TIMESTAMP NULL,
                         address TEXT,
                         city VARCHAR(100),
+                        state VARCHAR(100),
                         zip_code VARCHAR(20),
                         FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE
                     )
@@ -283,8 +287,10 @@ def create_all_tables():
                         total_amount DECIMAL(10,2) NOT NULL,
                         status VARCHAR(20) DEFAULT 'pending',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        expected_delivery_date TIMESTAMP NULL,
                         address TEXT,
                         city VARCHAR(100),
+                        state VARCHAR(100),
                         zip_code VARCHAR(20),
                         FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE
                     )
@@ -332,6 +338,16 @@ def create_all_tables():
                 
             try:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN zip_code VARCHAR(20)"))
+            except Exception:
+                pass
+                
+            try:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN state VARCHAR(100)"))
+            except Exception:
+                pass
+                
+            try:
+                conn.execute(text("ALTER TABLE orders ADD COLUMN expected_delivery_date TIMESTAMP NULL"))
             except Exception:
                 pass
 
@@ -1274,15 +1290,26 @@ def checkout():
                 # Extract address details from form submission
                 address = request.form.get('address', '').strip()
                 city = request.form.get('city', '').strip()
+                state = request.form.get('state', '').strip()
                 zip_code = request.form.get('zip_code', '').strip()
+                
+                # Delivery estimation logic
+                from datetime import timedelta
+                days_to_add = 7 # Default: Different state (4-7 days)
+                if city.lower() == 'mumbai':
+                    days_to_add = 2 # Same city (1-2 days)
+                elif state.lower() == 'maharashtra':
+                    days_to_add = 4 # Same state (2-4 days)
+                
+                expected_delivery_date = datetime.now() + timedelta(days=days_to_add)
                 
                 # Check for database dialect to execute correct query and fetch order_id
                 dialect = engine.dialect.name
                 if dialect == 'postgresql':
                     # Use RETURNING order_id for PostgreSQL
                     order_query = text("""
-                        INSERT INTO orders (buyer_id, total_amount, status, address, city, zip_code)
-                        VALUES (:buyer_id, :total_amount, 'pending', :address, :city, :zip_code)
+                        INSERT INTO orders (buyer_id, total_amount, status, address, city, state, zip_code, expected_delivery_date)
+                        VALUES (:buyer_id, :total_amount, 'pending', :address, :city, :state, :zip_code, :expected_delivery_date)
                         RETURNING order_id
                     """)
                     result = conn.execute(order_query, {
@@ -1290,21 +1317,25 @@ def checkout():
                         'total_amount': total,
                         'address': address,
                         'city': city,
-                        'zip_code': zip_code
+                        'state': state,
+                        'zip_code': zip_code,
+                        'expected_delivery_date': expected_delivery_date
                     })
                     order_id = result.scalar()
                 else:
                     # MySQL / SQLite insert
                     order_query = text("""
-                        INSERT INTO orders (buyer_id, total_amount, status, address, city, zip_code)
-                        VALUES (:buyer_id, :total_amount, 'pending', :address, :city, :zip_code)
+                        INSERT INTO orders (buyer_id, total_amount, status, address, city, state, zip_code, expected_delivery_date)
+                        VALUES (:buyer_id, :total_amount, 'pending', :address, :city, :state, :zip_code, :expected_delivery_date)
                     """)
                     result = conn.execute(order_query, {
                         'buyer_id': session['user_id'],
                         'total_amount': total,
                         'address': address,
                         'city': city,
-                        'zip_code': zip_code
+                        'state': state,
+                        'zip_code': zip_code,
+                        'expected_delivery_date': expected_delivery_date
                     })
                     # Reliable way to get last inserted ID on MySQL/SQLite
                     if hasattr(result, 'lastrowid') and result.lastrowid:
@@ -1406,14 +1437,14 @@ def order_history():
                 group_concat_expr = "GROUP_CONCAT(p.name SEPARATOR ', ')"
 
             query = text(f"""
-                SELECT o.order_id, o.buyer_id, o.total_amount, o.status, o.created_at,
+                SELECT o.order_id, o.buyer_id, o.total_amount, o.status, o.created_at, o.expected_delivery_date,
                        {group_concat_expr} as product_names,
                        COUNT(oi.order_item_id) as item_count
                 FROM orders o
                 LEFT JOIN order_items oi ON o.order_id = oi.order_id
                 LEFT JOIN products p ON oi.product_id = p.product_id
                 WHERE o.buyer_id = :user_id
-                GROUP BY o.order_id, o.buyer_id, o.total_amount, o.status, o.created_at
+                GROUP BY o.order_id, o.buyer_id, o.total_amount, o.status, o.created_at, o.expected_delivery_date
                 ORDER BY o.created_at DESC
             """)
             result = conn.execute(query, {'user_id': user_id})
@@ -1499,6 +1530,45 @@ def admin_dashboard():
         return render_template('admin_dashboard.html', pending_products=[], users=[], stats={}, orders=[])
 
 
+@app.route('/admin/orders')
+@login_required
+@admin_required
+def admin_orders():
+    """Admin orders management page"""
+    try:
+        with engine.connect() as conn:
+            dialect = engine.dialect.name
+            if dialect == 'postgresql':
+                group_concat_expr = "STRING_AGG(p.name, ', ')"
+            elif dialect == 'sqlite':
+                group_concat_expr = "GROUP_CONCAT(p.name, ', ')"
+            else:  # mysql
+                group_concat_expr = "GROUP_CONCAT(p.name SEPARATOR ', ')"
+
+            # Get all orders with user information
+            orders_query = text(f"""
+                SELECT o.*, 
+                       u.username, 
+                       u.full_name, 
+                       u.email,
+                       u.phone,
+                       COUNT(oi.order_item_id) as item_count,
+                       {group_concat_expr} as product_names
+                FROM orders o
+                JOIN users u ON o.buyer_id = u.user_id
+                LEFT JOIN order_items oi ON o.order_id = oi.order_id
+                LEFT JOIN products p ON oi.product_id = p.product_id
+                GROUP BY o.order_id, u.user_id, u.username, u.full_name, u.email, u.phone
+                ORDER BY o.created_at DESC
+            """)
+            orders = conn.execute(orders_query).mappings().all()
+            
+            return render_template('admin_orders.html', orders=orders)
+    except Exception as e:
+        print(f"Admin orders error: {e}")
+        return render_template('admin_orders.html', orders=[])
+
+
 # ==================== ADMIN PRODUCT APPROVAL ====================
 @app.route('/admin/product/approve/<int:product_id>', methods=['POST'])
 @login_required
@@ -1542,7 +1612,7 @@ def admin_reject_product(product_id):
 @admin_required
 def admin_update_order_status(order_id):
     """
-    Update order status (Pending, Approved, Rejected, Completed)
+    Update order status
     Only admin can update order status
     """
     try:
@@ -1550,7 +1620,7 @@ def admin_update_order_status(order_id):
         new_status = request.form.get('status', '').strip().lower()
         
         # Validate status
-        valid_statuses = ['pending', 'approved', 'rejected', 'completed', 'cancelled']
+        valid_statuses = ['pending', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled']
         if new_status not in valid_statuses:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'success': False, 'message': 'Invalid order status'}), 400
@@ -1596,9 +1666,11 @@ def admin_update_order_status(order_id):
             # Success message based on status
             status_messages = {
                 'pending': 'Order status updated to Pending',
-                'approved': 'Order approved successfully',
-                'rejected': 'Order rejected',
-                'completed': 'Order marked as Completed',
+                'confirmed': 'Order confirmed successfully',
+                'packed': 'Order marked as Packed',
+                'shipped': 'Order marked as Shipped',
+                'out_for_delivery': 'Order is Out for Delivery',
+                'delivered': 'Order marked as Delivered',
                 'cancelled': 'Order cancelled'
             }
             

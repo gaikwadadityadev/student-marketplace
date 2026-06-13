@@ -1,168 +1,181 @@
 {% extends "base.html" %}
 
-{% block title %}Order Management - Admin Dashboard{% endblock %}
+{% block title %}Manage Orders - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-dashboard {
+        min-height: calc(100vh - 150px);
+        background-color: #0F172A; /* Dark slate */
+        padding-top: 2rem;
+        padding-bottom: 4rem;
+        color: #F8FAFC;
+    }
+
+    /* Section Cards */
+    .section-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #F8FAFC;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    /* Modern Table Dark */
+    .table-dark-modern {
+        width: 100%;
+        margin-bottom: 0;
+        color: #CBD5E1;
+    }
+
+    .table-dark-modern th {
+        background: rgba(15, 23, 42, 0.6);
+        color: #94A3B8;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .table-dark-modern td {
+        padding: 1.25rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .table-dark-modern tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+        color: #64748B;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- Flash Messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-<div id="flashMessages">
-    {% for category, message in messages %}
-    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
-        role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-{% endwith %}
-
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-receipt"></i> Order Management</h2>
-        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
-
-    <!-- Orders Table -->
-    <div class="card shadow">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0"><i class="bi bi-list-ul"></i> All Orders</h4>
+<div class="admin-dashboard">
+    <div class="container-fluid px-4 px-lg-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0 text-white"><i class="bi bi-receipt-cutoff text-danger me-2"></i> All Orders</h2>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light"><i class="bi bi-arrow-left me-2"></i>Back to Dashboard</a>
         </div>
-        <div class="card-body">
-            {% if orders %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Products</th>
-                            <th>Items</th>
-                            <th>Total Amount</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTableBody">
-                        {% for order in orders %}
-                        <tr id="order-row-{{ order.order_id }}"
-                            class="{% if order.status == 'approved' %}table-light text-muted{% elif order.status in ['completed', 'cancelled'] %}table-secondary text-muted{% elif order.status == 'rejected' %}table-danger bg-opacity-10{% endif %}">
-                            <td><strong>#{{ order.order_id }}</strong></td>
-                            <td>
-                                <strong>{{ order.full_name }}</strong><br>
-                                <small class="text-muted">@{{ order.username }}</small>
-                            </td>
-                            <td>
-                                <small>{{ order.email }}</small>
-                            </td>
-                            <td>
-                                <small>{{ order.phone or 'N/A' }}</small>
-                            </td>
-                            <td>
-                                <small>{{ order.product_names[:50] }}{% if order.product_names and
-                                    order.product_names|length > 50 %}...{% endif %}</small>
-                            </td>
-                            <td>
-                                <span class="badge bg-secondary">{{ order.item_count }} item(s)</span>
-                            </td>
-                            <td><strong>₹{{ "%.2f"|format(order.total_amount) }}</strong></td>
-                            <td id="status-cell-{{ order.order_id }}">
-                                {% if order.status == 'completed' %}
-                                <span class="badge bg-success rounded-pill">Completed</span>
-                                {% elif order.status == 'approved' %}
-                                <span class="badge bg-info rounded-pill">Approved</span>
-                                {% elif order.status == 'rejected' %}
-                                <span class="badge bg-danger rounded-pill">Rejected</span>
-                                {% elif order.status == 'cancelled' %}
-                                <span class="badge bg-dark rounded-pill">Cancelled</span>
-                                {% else %}
-                                <span class="badge bg-warning rounded-pill">Pending</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <small>{{ order.created_at.strftime('%Y-%m-%d %H:%M') if order.created_at else 'N/A'
-                                    }}</small>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    {% if order.status == 'pending' %}
-                                    <button type="button" class="btn btn-success btn-sm rounded-pill px-3"
-                                        onclick="updateOrderStatus({{ order.order_id }}, 'approved')"
-                                        title="Approve Order">
-                                        <i class="bi bi-check-circle"></i> Approve
-                                    </button>
-                                    <button type="button" class="btn btn-danger btn-sm rounded-pill px-3"
-                                        onclick="updateOrderStatus({{ order.order_id }}, 'rejected')"
-                                        title="Reject Order">
-                                        <i class="bi bi-x-circle"></i> Reject
-                                    </button>
-                                    {% elif order.status == 'approved' %}
-                                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3"
-                                        onclick="updateOrderStatus({{ order.order_id }}, 'completed')"
-                                        title="Mark as Completed">
-                                        <i class="bi bi-check-all"></i> Complete
-                                    </button>
-                                    {% elif order.status == 'rejected' %}
-                                    <button type="button" class="btn btn-warning btn-sm rounded-pill px-3"
-                                        onclick="updateOrderStatus({{ order.order_id }}, 'pending')"
-                                        title="Set to Pending">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Pending
-                                    </button>
-                                    {% elif order.status == 'completed' %}
-                                    <span class="text-muted small">No actions</span>
-                                    {% else %}
-                                    <span class="text-muted small">No actions</span>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+        <div class="section-card">
+            <div class="section-header">
+                <h3 class="section-title"><i class="bi bi-list"></i> Manage Orders</h3>
+                
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text bg-dark border-secondary text-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="orderSearch" class="form-control bg-dark border-secondary text-white" placeholder="Search orders...">
+                </div>
             </div>
-            {% else %}
-            <p class="text-muted text-center py-4">No orders found.</p>
-            {% endif %}
+            <div>
+                {% if orders %}
+                <div class="table-responsive">
+                    <table class="table-dark-modern" id="ordersTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Products</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr id="order-row-{{ order.order_id }}" class="order-row">
+                                <td class="fw-medium text-white order-id">#{{ order.order_id }}</td>
+                                <td class="customer-info">
+                                    <div class="text-white fw-bold">{{ order.full_name }}</div>
+                                    <div class="small opacity-75">{{ order.email }}</div>
+                                    <div class="small opacity-50">{{ order.phone }}</div>
+                                </td>
+                                <td>
+                                    <div class="small text-truncate" style="max-width: 200px;" title="{{ order.product_names }}">{{ order.product_names }}</div>
+                                    <div class="badge bg-secondary">{{ order.item_count }} items</div>
+                                </td>
+                                <td class="fw-semibold text-success">₹{{ "%.0f"|format(order.total_amount) }}</td>
+                                <td class="small opacity-75">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td id="status-cell-{{ order.order_id }}">
+                                    {% if order.status == 'delivered' %}
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25">Delivered</span>
+                                    {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25">Cancelled</span>
+                                    {% elif order.status == 'pending' %}
+                                        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25">{{ order.status|title|replace('_', ' ') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end text-nowrap" id="action-cell-{{ order.order_id }}">
+                                    <select class="form-select form-select-sm bg-dark text-white border-secondary d-inline-block w-auto mb-2" onchange="updateOrderStatus({{ order.order_id }}, this.value)">
+                                        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                        <option value="packed" {% if order.status == 'packed' %}selected{% endif %}>Packed</option>
+                                        <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                        <option value="out_for_delivery" {% if order.status == 'out_for_delivery' %}selected{% endif %}>Out for Delivery</option>
+                                        <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                        <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No orders received yet.</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
-<!-- JavaScript for AJAX Order Status Updates -->
+{% block extra_js %}
 <script>
-    /**
-     * Update order status via AJAX
-     * @param {number} orderId - Order ID to update
-     * @param {string} newStatus - New status (pending, approved, rejected, completed)
-     */
-    function updateOrderStatus(orderId, newStatus) {
-        // Confirm action
-        const statusNames = {
-            'pending': 'Pending',
-            'approved': 'Approved',
-            'rejected': 'Rejected',
-            'completed': 'Completed',
-            'cancelled': 'Cancelled'
-        };
+    function updateOrderStatus(orderId, status) {
+        if (!confirm(`Are you sure you want to mark this order as ${status}?`)) return;
 
-        if (!confirm(`Are you sure you want to update order #${orderId} status to "${statusNames[newStatus]}"?`)) {
-            return;
-        }
-
-        // Create form data
         const formData = new FormData();
-        formData.append('status', newStatus);
+        formData.append('status', status);
 
-        // Disable button during request
-        const buttons = document.querySelectorAll(`#order-row-${orderId} button`);
-        buttons.forEach(btn => btn.disabled = true);
-
-        // Send AJAX request
         fetch(`/admin/order/update_status/${orderId}`, {
             method: 'POST',
             headers: {
@@ -170,212 +183,51 @@
             },
             body: formData
         })
-            .then(async response => {
-                // Check content type to safely parse JSON
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const data = await response.json();
-                    if (!data.success) {
-                        throw new Error(data.message || 'Server returned an error');
-                    }
-                    return data;
-                } else {
-                    // Retrieve text if not JSON (e.g. 500 error page)
-                    const text = await response.text();
-                    console.error('Non-JSON Response:', text);
-                    throw new Error('Network response was not valid JSON');
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI dynamically
+                const statusCell = document.getElementById(`status-cell-${orderId}`);
+                
+                // Update Status Badge
+                let badgeClass = 'bg-info bg-opacity-25 text-info border border-info border-opacity-25';
+                let displayStatus = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                if (status === 'delivered') {
+                    badgeClass = 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
+                } else if (status === 'cancelled') {
+                    badgeClass = 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
+                } else if (status === 'pending') {
+                    badgeClass = 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
                 }
-            })
-            .then(data => {
-                // Update status badge
-                updateStatusBadge(orderId, newStatus);
-
-                // Update row appearance
-                updateRowAppearance(orderId, newStatus);
-
-                // Show success message
-                showFlashMessage(data.message, 'success');
-
-                // Update action buttons based on new status
-                updateActionButtons(orderId, newStatus);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Show the ACTUAL error message
-                showFlashMessage(error.message, 'danger');
-
-                // Re-enable buttons
-                buttons.forEach(btn => btn.disabled = false);
-            });
+                
+                statusCell.innerHTML = `<span class="badge ${badgeClass}">${displayStatus}</span>`;
+            } else {
+                alert('Error updating order: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
     }
 
-    /**
-     * Update status badge in the table
-     */
-    function updateStatusBadge(orderId, status) {
-        const statusCell = document.getElementById(`status-cell-${orderId}`);
-        if (!statusCell) return;
-
-        const statusClasses = {
-            'pending': 'bg-warning',
-            'approved': 'bg-info',
-            'rejected': 'bg-danger',
-            'completed': 'bg-success',
-            'cancelled': 'bg-dark'
-        };
-
-        const statusNames = {
-            'pending': 'Pending',
-            'approved': 'Approved',
-            'rejected': 'Rejected',
-            'completed': 'Completed',
-            'cancelled': 'Cancelled'
-        };
-
-        statusCell.innerHTML = `<span class="badge ${statusClasses[status]} rounded-pill">${statusNames[status]}</span>`;
-    }
-
-    /**
-     * Update row appearance based on status
-     */
-    function updateRowAppearance(orderId, status) {
-        const row = document.getElementById(`order-row-${orderId}`);
-        if (!row) return;
-
-        // Reset classes
-        row.className = '';
-
-        // Add class based on status
-        if (status === 'approved') {
-            row.classList.add('table-light', 'text-muted');
-        } else if (status === 'completed' || status === 'cancelled') {
-            row.classList.add('table-secondary', 'text-muted');
-        } else if (status === 'rejected') {
-            row.classList.add('table-danger', 'bg-opacity-10');
-        }
-        // Pending has no special class (default white/hover)
-    }
-
-    /**
-     * Update action buttons based on order status
-     */
-    function updateActionButtons(orderId, status) {
-        const actionCell = document.querySelector(`#order-row-${orderId} td:last-child`);
-        if (!actionCell) return;
-
-        let buttonsHtml = '';
-
-        if (status === 'pending') {
-            buttonsHtml = `
-            <div class="btn-group btn-group-sm" role="group">
-                <button type="button" 
-                        class="btn btn-success btn-sm rounded-pill px-3"
-                        onclick="updateOrderStatus(${orderId}, 'approved')"
-                        title="Approve Order">
-                    <i class="bi bi-check-circle"></i> Approve
-                </button>
-                <button type="button" 
-                        class="btn btn-danger btn-sm rounded-pill px-3"
-                        onclick="updateOrderStatus(${orderId}, 'rejected')"
-                        title="Reject Order">
-                    <i class="bi bi-x-circle"></i> Reject
-                </button>
-            </div>
-        `;
-        } else if (status === 'approved') {
-            buttonsHtml = `
-            <div class="btn-group btn-group-sm" role="group">
-                <button type="button" 
-                        class="btn btn-primary btn-sm rounded-pill px-3"
-                        onclick="updateOrderStatus(${orderId}, 'completed')"
-                        title="Mark as Completed">
-                    <i class="bi bi-check-all"></i> Complete
-                </button>
-            </div>
-        `;
-        } else if (status === 'rejected') {
-            // Only allow setting back to pending
-            buttonsHtml = `
-            <div class="btn-group btn-group-sm" role="group">
-                <button type="button" 
-                        class="btn btn-warning btn-sm rounded-pill px-3"
-                        onclick="updateOrderStatus(${orderId}, 'pending')"
-                        title="Set to Pending">
-                    <i class="bi bi-arrow-counterclockwise"></i> Pending
-                </button>
-            </div>
-        `;
-        } else if (status === 'completed') {
-            buttonsHtml = `<span class="text-muted small">No actions</span>`;
-        } else {
-            buttonsHtml = `<span class="text-muted small">No actions</span>`;
-        }
-
-        actionCell.innerHTML = buttonsHtml;
-    }
-
-    /**
-     * Show flash message at the top of the page
-     */
-    function showFlashMessage(message, type) {
-        const flashContainer = document.getElementById('flashMessages') || createFlashContainer();
-        const alertClass = type === 'error' ? 'danger' : type;
-
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${alertClass} alert-dismissible fade show`;
-        alertDiv.setAttribute('role', 'alert');
-        alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-
-        flashContainer.appendChild(alertDiv);
-
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            alertDiv.classList.remove('show');
-            setTimeout(() => alertDiv.remove(), 150);
-        }, 5000);
-    }
-
-    /**
-     * Create flash message container if it doesn't exist
-     */
-    function createFlashContainer() {
-        const container = document.createElement('div');
-        container.id = 'flashMessages';
-        container.className = 'container my-3';
-        const content = document.querySelector('.container.my-5');
-        if (content) {
-            content.parentNode.insertBefore(container, content);
-        }
-        return container;
-    }
+    // Search functionality
+    document.getElementById('orderSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('.order-row');
+        
+        rows.forEach(row => {
+            const idText = row.querySelector('.order-id').innerText.toLowerCase();
+            const customerText = row.querySelector('.customer-info').innerText.toLowerCase();
+            
+            if (idText.includes(term) || customerText.includes(term)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
 </script>
-
-<style>
-    /* Custom styles for order management buttons */
-    .btn-group-sm .btn {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.75rem;
-    }
-
-    .btn.rounded-pill {
-        border-radius: 50rem !important;
-    }
-
-    .badge.rounded-pill {
-        padding: 0.35em 0.65em;
-    }
-
-    /* Order row styles */
-    .table-light.text-muted td strong {
-        color: #6c757d;
-        /* Muted strong text */
-    }
-
-    /* Ensure action buttons remain visible/opaque even in muted rows if needed, 
-       but here the row is muted, so maybe buttons should be standard? 
-       Bootstrap buttons usually override inherited colors. */
-</style>
+{% endblock %}
 {% endblock %}
